@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Linutil documentation
-    url: https://chris-titus-docs.github.io/linutil-docs/
-    about: check out the docs
+  - name: Open Genome docs
+    url: https://github.com/Jakeelamb/genome_os/tree/main/docs
+    about: Read setup, privacy, and release notes.

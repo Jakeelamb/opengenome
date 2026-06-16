@@ -1,6 +1,24 @@
 # Open Genome
 
-Terminal utility for genomics workflows, built on the [Linutil](https://github.com/ChrisTitusTech/linutil)-style Rust TUI: left pane categories, right pane actions, same keyboard model.
+Terminal utility for genomics workflows, built on a Linutil-style Rust TUI: left pane categories, right pane actions, same keyboard model.
+
+Open Genome helps privacy-minded users set up local genomics tooling, import sequencing files, prepare references, run a native Nextflow workflow, and generate evidence reports without uploading genome data.
+
+## Install
+
+Run the latest GitHub release:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Jakeelamb/genome_os/main/start.sh | sh
+```
+
+Or clone and run from source:
+
+```bash
+git clone https://github.com/Jakeelamb/genome_os.git
+cd genome_os
+cargo run -p linutil_tui
+```
 
 ## Run from source
 
@@ -25,6 +43,14 @@ cargo run -p linutil_tui -- --help
 
 Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmation`, `--override-validation`, `--size-bypass`, `--mouse`, `--bypass-root`.
 
+## First Run
+
+1. Open `Setup -> Install private Miniforge/Conda` if conda is not already available.
+2. Run `Setup -> Install / update: Open Genome env`.
+3. Run `Setup -> Choose output folder`.
+4. Run `Setup -> Choose sequencing data` or `Setup -> Import sequencing files`.
+5. Run `Setup -> Setup checklist` and follow the unchecked items.
+
 ## Configuration (manifest + conda)
 
 - **User manifest:** `$XDG_CONFIG_HOME/open-genome/manifest.toml` (created on first Setup action from the bundled default).
@@ -37,6 +63,12 @@ Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmat
 - **Reference/workflow:** Assembly actions fetch the public GATK GRCh38 bundle, index it locally, prepare the native Open Genome Nextflow pipeline, and run/resume it through the single `opengenome` conda environment. Sarek remains available as an advanced external workflow.
 - **Reports:** The native workflow stages exact process outputs into the report compiler, then emits per-row HTML/TSV/JSON evidence with explicit limitations and PGx/annotation status. The base env includes lightweight `gfastats`; heavier report tools such as QUAST, VEP, and full PharmCAT installation are treated as optional/on-demand.
 - **Environment:** the main `opengenome` conda spec lives at [core/tabs/open-genome/modules/opengenome/environment.yml](core/tabs/open-genome/modules/opengenome/environment.yml). It is the source of truth for fresh core installs. IGV is kept in the separate `og-genome-browser` module because current GATK packages require Java 17 while current IGV requires Java 21. Legacy per-tool module specs remain under [core/tabs/open-genome/modules/](core/tabs/open-genome/modules/) for fallback/debugging.
+
+## Safety Boundaries
+
+Open Genome reports are evidence summaries, not diagnosis or treatment advice. Variant matches require review by classification, source date, review status, population frequency, phenotype, family history, and clinician judgment. Negative findings do not remove genetic risk.
+
+See [docs/privacy-and-interpretation.md](docs/privacy-and-interpretation.md).
 
 ## Verification
 
@@ -63,7 +95,13 @@ size_bypass = false
 
 ## Upstream
 
-Forked from Chris Titus Tech’s Linutil; see upstream README and license in `LICENSE`. Contributor graphics and distro install snippets in older revisions referred to Linutil releases.
+Open Genome keeps the upstream TUI interaction model while replacing the command surface with local genomics workflows. The binary is still named `linutil` for compatibility with the inherited package layout.
+
+## Docs
+
+- [Privacy and interpretation boundaries](docs/privacy-and-interpretation.md)
+- [Release checklist](docs/release-checklist.md)
+- [Contributor notes](docs/contributor-notes.md)
 
 ## Contributing
 

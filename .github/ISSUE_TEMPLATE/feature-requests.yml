@@ -1,5 +1,5 @@
 name: Feature Request
-description: Suggest a new feature or improvement to help us enhance the project.
+description: Suggest a workflow, setup, report, or documentation improvement.
 title: "[Feature Request]: <title>"
 labels: ["type: enhancement", "initial review required"]
 assignees: []
@@ -14,7 +14,7 @@ body:
       label: Problem Description
       description: |
         Is your feature request related to a problem? If yes, please describe.
-      placeholder: I'm always frustrated when ...
+      placeholder: It is hard to understand whether my reference files are ready.
   - type: textarea
     id: proposed-solution
     attributes:
@@ -46,5 +46,5 @@ body:
           required: true
         - label: I checked already existing discussions.
           required: true
-        - label: This feature is not included in the roadmap.
+        - label: I considered whether this adds useful genomics workflow value without unnecessary bloat.
           required: true

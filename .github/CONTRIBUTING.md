@@ -1,70 +1,39 @@
-# Contributing Guidelines for Linutil
+# Contributing to Open Genome
 
-Thank you for considering contributing to Linutil! We appreciate your effort in helping improve this project. To ensure that your contributions align with the goals and quality standards of Linutil, please follow these guidelines:
+Open Genome is a local-first terminal app for personal genomics workflows. Contributions should keep setup clear, data local by default, and results explicit about their interpretation limits.
 
-## 1. **Install Rust**: 
+## Development Setup
 
-Make sure you have Rust installed on your machine. You can install it by following the instructions at [rust-lang.org](https://www.rust-lang.org/tools/install).
-
-## 2. **Fork and Clone the repo**
-
-1. Make a fork of the repo in GitHub
-2. Clone the fork
 ```bash
-git clone https://github.com/YOUR_USERNAME_HERE/linutil.git
-cd linutil
-   ```
+git clone https://github.com/YOUR_USERNAME_HERE/genome_os.git
+cd genome_os
+cargo run -p linutil_tui
+```
 
-## 3. Make your changes
+Setup scripts require Python 3.11+ for `tomllib`. Full workflow testing may also use conda, Java, Nextflow, and the bundled `opengenome` conda environment.
 
-- **Edit the files you want to change**: Make your changes to the relevant files.
-- **Test your changes**: Run `cargo run` to test your modifications in a local environment and ensure everything works as expected.
+## Before Opening a Pull Request
 
-## 4. Understand the existing code
+Run:
 
-- **Have a clear reason**: Don’t change the way things are done without a valid reason. If you propose an alteration, be prepared to explain why it’s necessary and how it improves the project.
-- **Respect existing conventions**: Changes should align with the existing code style, design patterns, and overall project philosophy. If you want to introduce a new way of doing things, justify it clearly.
+```bash
+cargo fmt --check
+cargo check -p linutil_tui --all-features
+cargo test
+scripts/check-genomics.sh
+git diff --check
+```
 
-## 5. Learn from Past Pull Requests (PRs)
+If a dependency is unavailable, mention the skipped check and the reason in the pull request.
 
-- **Check merged PRs**: Reviewing merged pull requests can give you an idea of what kind of contributions are accepted and how they are implemented.
-- **Study rejected PRs**: This is especially important as it helps you avoid making similar mistakes or proposing changes that have already been considered and declined.
+## Contribution Guidelines
 
-## 6. Write Clean, Descriptive Commit Messages
+- Keep pull requests focused on one user-visible change, bug fix, or documentation update.
+- Preserve the existing TUI controls and layout unless the change explicitly targets interaction design.
+- Keep user genome data local by default. Be explicit when a script downloads public tools, references, or databases.
+- Update README or `docs/` when changing setup, workflow, reporting, privacy, or release behavior.
+- Do not submit generated code or LLM-assisted changes without reviewing, testing, and understanding them.
 
-- **Be descriptive**: Your commit messages should clearly describe what the change does and why it was made.
-- **Use the imperative mood**: For example, "Add feature X" or "Fix bug in Y", rather than "Added feature X" or "Fixed bug in Y".
-- **Keep commits clean**: Avoid committing a change and then immediately following it with a fix for that change. Instead, amend your commit or squash it if needed.
+## License
 
-## 7. Keep Your Pull Requests (PRs) Small and Focused
-
-- **Make small, targeted PRs**: Focus on one feature or fix per pull request. This makes it easier to review and increases the likelihood of acceptance.
-- **Avoid combining unrelated changes**: PRs that tackle multiple unrelated issues are harder to review and might be rejected because of a single problem.
-
-## 8. Understand and Test the Code You Write
-
-- **Review your code**: Before submitting your changes, take the time to review your code for readability, efficiency and performance. Consider how your changes affect the project.
-- **Avoid using LLMs**: Don't submit AI-generated code without reviewing and testing it first. Ensure that any code you submit is thoroughly understood and meets the project's standards.
-- **Testing Requirements**: Failure to conduct testing after multiple requests may result in the closure of your Pull Request.
-
-## 9. Code Review and Feedback
-
-- **Expect feedback**: PRs will undergo code review. Be open to feedback and willing to make adjustments as needed.
-- **Participate in reviews**: If you feel comfortable, review other contributors' PRs as well. Peer review is a great way to learn and ensure high-quality contributions.
-
-## 10. Contributing Is More Than Just Code
-
-- **Test the tool**: Running tests and providing feedback on how the tool works in different environments is a valuable contribution.
-- **Write well-formed issues**: Clearly describe bugs or problems you encounter, providing as much detail as possible, including steps to reproduce the issue.
-- **Propose reasonable feature requests**: When suggesting new features, ensure they fit within the scope, style, and design of the project. Provide clear reasoning and use cases.
-
-## 11. Documentation
-
-- **Update the documentation**: If your change affects the functionality, please update the relevant documentation files to reflect this.
-- **Automatic generation**: If you decide to add functionality through a new shell script, make sure to fill out all fields in `tab_data.toml` and run `cargo xtask docgen`.
-
-## 12. License
-
-- **Agree to the license**: By contributing to Linutil, you agree that your contributions will be licensed under the project's MIT license.
-
-We appreciate your contributions and look forward to collaborating with you to make Linutil better!
+By contributing, you agree that your contributions are licensed under the project's MIT license.

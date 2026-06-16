@@ -1,4 +1,4 @@
-name: LinUtil Release
+name: Open Genome Release
 
 on:
   workflow_dispatch:
@@ -11,16 +11,11 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  linutil_build:
+  release_build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Clone dna (path dep for default bio-logo)
-        run: |
-          mkdir -p "$(dirname "$GITHUB_WORKSPACE")/dinosauria"
-          git clone --depth 1 https://github.com/Jakeelamb/dna.git "$(dirname "$GITHUB_WORKSPACE")/dinosauria/dna"
 
       - name: Install musl-tools
         run: sudo apt-get update && sudo apt-get install musl-tools
@@ -47,6 +42,9 @@ jobs:
       - name: Install cross-rs for cross-compilation
         run: cargo install cross
 
+      - name: Run Rust tests
+        run: cargo test --no-fail-fast
+
       - name: Build x86_64 binary
         run: cargo build --target-dir=build --release --verbose --target=x86_64-unknown-linux-musl --all-features
 
@@ -67,10 +65,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.version }}
-          name: Pre-Release ${{ env.version }}
+          name: Open Genome Pre-Release ${{ env.version }}
           body: |
-            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/ChrisTitusTech/linutil/${{ env.version }}/linutil)
-            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/ChrisTitusTech/linutil/${{ env.version }}/linutil-aarch64)
+            Local-first terminal setup for personal genomics workflows.
+
+            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/Jakeelamb/genome_os/${{ env.version }}/linutil)
+            ![GitHub Downloads (specific asset, specific tag)](https://img.shields.io/github/downloads/Jakeelamb/genome_os/${{ env.version }}/linutil-aarch64)
 
           append_body: true
           generate_release_notes: true

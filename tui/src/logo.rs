@@ -372,13 +372,34 @@ impl HelixLogo {
             let color_cross = Color::Rgb(150, 170, 188);
 
             if x % 3 == 0 {
-                rows[cross][x] = Span::styled("|", Style::default().fg(color_cross));
+                Self::set_logo_cell(
+                    &mut rows,
+                    cross,
+                    x,
+                    Span::styled("|", Style::default().fg(color_cross)),
+                );
             }
-            rows[a][x] = Span::styled("o", Style::default().fg(color_a).bold());
-            rows[b][x] = Span::styled("o", Style::default().fg(color_b).bold());
+            Self::set_logo_cell(
+                &mut rows,
+                a,
+                x,
+                Span::styled("o", Style::default().fg(color_a).bold()),
+            );
+            Self::set_logo_cell(
+                &mut rows,
+                b,
+                x,
+                Span::styled("o", Style::default().fg(color_b).bold()),
+            );
         }
 
         rows.into_iter().map(Line::from).collect()
+    }
+
+    fn set_logo_cell(rows: &mut [Vec<Span<'static>>], row: usize, col: usize, span: Span<'static>) {
+        if let Some(cell) = rows.get_mut(row).and_then(|cells| cells.get_mut(col)) {
+            *cell = span;
+        }
     }
 
     fn scaled_width(width: u16) -> u16 {

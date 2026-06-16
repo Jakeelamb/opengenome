@@ -20,15 +20,15 @@ check() {
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 if [ -f "$SCRIPT_DIR/Cargo.toml" ] && command -v cargo >/dev/null 2>&1; then
-    TARGET_DIR=${CARGO_TARGET_DIR:-"$HOME/.cache/linutil/target"}
+    TARGET_DIR=${CARGO_TARGET_DIR:-"$HOME/.cache/open-genome/target"}
     mkdir -p "$TARGET_DIR"
     check $? "Preparing build cache"
 
     cd "$SCRIPT_DIR"
-    check $? "Entering linutil directory"
+    check $? "Entering Open Genome directory"
 
     CARGO_TARGET_DIR="$TARGET_DIR" cargo run -p linutil_tui --bin linutil -- "$@"
-    check $? "Running linutil from source"
+    check $? "Running Open Genome from source"
     exit 0
 fi
 
@@ -42,8 +42,8 @@ findArch() {
 
 getUrl() {
     case "${arch}" in
-        x86_64) echo "https://github.com/ChrisTitusTech/linutil/releases/latest/download/linutil";;
-        *) echo "https://github.com/ChrisTitusTech/linutil/releases/latest/download/linutil-${arch}";;
+        x86_64) echo "https://github.com/Jakeelamb/genome_os/releases/latest/download/linutil";;
+        *) echo "https://github.com/Jakeelamb/genome_os/releases/latest/download/linutil-${arch}";;
     esac
 }
 
@@ -52,13 +52,13 @@ temp_file=$(mktemp)
 check $? "Creating the temporary file"
 
 curl -fsL "$(getUrl)" -o "$temp_file"
-check $? "Downloading linutil"
+check $? "Downloading Open Genome"
 
 chmod +x "$temp_file"
 check $? "Making linutil executable"
 
 "$temp_file" "$@"
-check $? "Executing linutil"
+check $? "Executing Open Genome"
 
 rm -f "$temp_file"
 check $? "Deleting the temporary file"

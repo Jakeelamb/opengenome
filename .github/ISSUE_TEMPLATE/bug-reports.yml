@@ -8,64 +8,38 @@ body:
     attributes:
       value: |
         Thank you for helping us improve! Please provide as much detail as possible to ensure we can address the issue effectively.
-  - type: dropdown
-    id: distribution
+  - type: input
+    id: open-genome-version
     attributes:
-      label: Distribution
+      label: Open Genome Version
+      description: Release tag or commit hash.
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating System
+      description: Linux distribution and version, or VM/container image.
+      placeholder: e.g., Arch Linux, Ubuntu 24.04, Fedora 41
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
       multiple: false
-      description: Select the Linux distribution you are using.
+      description: Which part failed?
       options:
-        - Arch
-        - Ubuntu
-        - Fedora
-        - Debian
-        - openSUSE
+        - Setup checklist
+        - Conda environment
+        - File/folder selection
+        - Sample import
+        - Reference download/indexing
+        - Annotation cache
+        - Native workflow
+        - Reports
+        - TUI display
         - Other
-    validations:
-      required: true
-  - type: input
-    id: specify-distribution
-    attributes:
-      label: Distribution (if "Other" selected)
-      description: Enter the name of your Linux distribution.
-      placeholder: e.g., Manjaro, Pop!_OS
-  - type: dropdown
-    id: de-wm
-    attributes:
-      label: Desktop Environment / Window Manager
-      multiple: false
-      description: Select your desktop environment or window manager.
-      options:
-        - GNOME
-        - KDE Plasma
-        - XFCE
-        - Hyprland
-        - i3
-        - Other
-    validations:
-      required: true
-  - type: input
-    id: specify-de-wm
-    attributes:
-      label: Desktop Environment / Window Manager (if "Other" selected)
-      description: Enter the name of your desktop environment or window manager.
-      placeholder: e.g., LXQt, Openbox
-  - type: dropdown
-    id: windowing-system
-    attributes:
-      label: Windowing System
-      multiple: false
-      description: Specify whether you are using X11 or Wayland.
-      options:
-        - X11
-        - Wayland
-    validations:
-      required: true
-  - type: input
-    id: linutil-version
-    attributes:
-      label: Linutil Version
-      description: Version number (found above the list within Linutil).
     validations:
       required: true
   - type: dropdown
@@ -87,6 +61,15 @@ body:
       label: Commit Hash (if "Other" selected)
       description: Enter commit hash if not using a listed branch.
       placeholder: e.g., 09ebb1c, 09ebb1c604ba8f15fd818de2ead0a9ef2690fc21
+  - type: textarea
+    id: setup-checklist
+    attributes:
+      label: Setup Checklist Output
+      description: Paste `Setup -> Setup checklist` output if relevant. Remove private paths or sample names first.
+      placeholder: |
+        Machine
+        [x] Conda available ...
+        [ ] Reference FASTA ...
   - type: textarea
     id: describe-bug
     attributes:
@@ -130,7 +113,7 @@ body:
       label: Logs or Screenshots
       description: |
         If applicable, add logs or screenshots to help explain your problem.
-      placeholder: Remeber to use code blocks (```) for logs.
+      placeholder: Remember to use code blocks (```) for logs.
   - type: checkboxes
     id: checklist
     attributes:
@@ -142,5 +125,5 @@ body:
           required: true
         - label: This issue is not included in the roadmap.
           required: true
-        - label: This issue is present on both stable and development branches.
+        - label: I can reproduce this on the latest main branch or latest release.
           required: true

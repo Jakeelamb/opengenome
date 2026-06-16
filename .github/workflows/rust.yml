@@ -23,11 +23,6 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Clone dna (path dep for default bio-logo)
-        run: |
-          mkdir -p "$(dirname "$GITHUB_WORKSPACE")/dinosauria"
-          git clone --depth 1 https://github.com/Jakeelamb/dna.git "$(dirname "$GITHUB_WORKSPACE")/dinosauria/dna"
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -46,7 +41,7 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-index-
 
       - name: Run cargo test
-        run: cargo test --no-fail-fast --package linutil_core
+        run: cargo test --no-fail-fast
 
       - name: Run cargo clippy
         run: cargo clippy -- -Dwarnings
