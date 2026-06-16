@@ -31,6 +31,8 @@ Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmat
 - **Privacy:** local-only user data by default. Public tools, references, and pipelines may be downloaded; reads/BAMs/VCFs/logs are not uploaded.
 - **Paths:** `paths.reference`, `paths.dataset`, `paths.workdir`, `paths.threads`.
 - **Conda:** Open Genome can install private Miniforge/Conda under `$XDG_DATA_HOME/open-genome/miniforge`, or use `conda.conda_exe`.
+- **Setup path selection:** Setup actions let users choose files/folders with `fzf` when available, or paste a path directly. Selecting a sequencing file imports its containing folder so paired reads and related files are found together.
+- **Setup checklist:** `Setup -> Setup checklist` shows completed and missing setup items, with the next action to run for each missing requirement.
 - **Samples:** Setup can scan paired FASTQ/FASTQ.gz, existing BAM/CRAM, existing VCF, or user-provided assembly files, including mixed folders. It writes row-id based native Open Genome samplesheets plus a Sarek-compatible sheet for the advanced external workflow.
 - **Reference/workflow:** Assembly actions fetch the public GATK GRCh38 bundle, index it locally, prepare the native Open Genome Nextflow pipeline, and run/resume it through the single `opengenome` conda environment. Sarek remains available as an advanced external workflow.
 - **Reports:** The native workflow stages exact process outputs into the report compiler, then emits per-row HTML/TSV/JSON evidence with explicit limitations and PGx/annotation status. The base env includes lightweight `gfastats`; heavier report tools such as QUAST, VEP, and full PharmCAT installation are treated as optional/on-demand.

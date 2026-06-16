@@ -21,11 +21,12 @@ This directory is embedded next to the tab trees and extracted at runtime with t
 
 1. Setup -> Install private Miniforge/Conda.
 2. Setup -> Install / update: Open Genome env.
-3. Setup -> Scan sequencing folder. This writes local row-id based Open Genome and Sarek-compatible CSVs and records only local file paths.
-4. Resources -> Set up local annotation cache, then Assembly -> Fetch/index configured GRCh38 reference.
-5. Assembly -> Prepare Open Genome native run, then Run / resume Open Genome native workflow.
-6. Visualization -> Summarize local workflow outputs, optionally launch IGV from the separate genome browser env.
-7. Reports -> Review the report sources and interpretation boundaries.
+3. Setup -> Import sequencing files. Choose or paste a sequencing file/folder. This writes local row-id based Open Genome and Sarek-compatible CSVs and records only local file paths.
+4. Setup -> Setup checklist to see what is ready and what still needs to be configured.
+5. Resources -> Set up local annotation cache, then Assembly -> Fetch/index configured GRCh38 reference.
+6. Assembly -> Prepare Open Genome native run, then Run / resume Open Genome native workflow.
+7. Visualization -> Summarize local workflow outputs, optionally launch IGV from the separate genome browser env.
+8. Reports -> Review the report sources and interpretation boundaries.
 
 Open Genome may download public tools, nf-core/sarek, and reference resources, but user reads, BAM/CRAM, VCF, logs, and metadata stay local.
 

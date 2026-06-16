@@ -13,14 +13,14 @@ multi_select = false
 
 [[data.entries]]
 name = "Import sequencing files"
-description = "Find FASTQ, BAM, CRAM, VCF, or assembly files and save Open Genome plus Sarek-compatible samplesheets."
+description = "Choose a sequencing file or folder, then create Open Genome and Sarek-compatible samplesheets."
 script = "scripts/scan_sequencing_folder.sh"
 task_list = "CFG DATA"
 multi_select = false
 
 [[data.entries]]
-name = "Review project settings"
-description = "Show saved paths, sample scan, reference, workflow, and results settings."
+name = "Setup checklist"
+description = "Show what is ready, what is missing, and which setup action to run next."
 script = "scripts/show_paths.sh"
 task_list = "CFG"
 multi_select = false
@@ -51,22 +51,22 @@ task_list = "CHK"
 multi_select = false
 
 [[data.entries]]
-name = "Set work directory"
-description = "Interactive: saves paths.workdir."
+name = "Choose output folder"
+description = "Pick or paste where scratch files and results should be stored."
 script = "scripts/set_workdir.sh"
 task_list = "CFG"
 multi_select = false
 
 [[data.entries]]
-name = "Set reference genome path"
-description = "Interactive: saves paths.reference in manifest.toml."
+name = "Choose reference genome"
+description = "Pick or paste a reference FASTA file or a folder containing reference files."
 script = "scripts/set_reference_path.sh"
 task_list = "CFG REF"
 multi_select = false
 
 [[data.entries]]
-name = "Set sequencing dataset path"
-description = "Interactive: saves paths.dataset."
+name = "Choose sequencing data"
+description = "Pick or paste a FASTQ, BAM, CRAM, VCF, assembly file, or a folder containing them."
 script = "scripts/set_dataset_path.sh"
 task_list = "CFG DATA"
 multi_select = false

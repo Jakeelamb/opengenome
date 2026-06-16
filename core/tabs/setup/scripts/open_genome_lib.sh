@@ -84,5 +84,145 @@ open_genome_conda_run() {
 	"$OG_CONDA_EXE" run -n "$env_name" "$@"
 }
 
+open_genome_expand_path() {
+	path=$1
+	case "$path" in
+		~)
+			printf '%s\n' "$HOME"
+			;;
+		~/*)
+			printf '%s/%s\n' "$HOME" "${path#~/}"
+			;;
+		*)
+			printf '%s\n' "$path"
+			;;
+	esac
+}
+
+open_genome_clean_path() {
+	path=$1
+	path=${path#\"}
+	path=${path%\"}
+	path=${path#\'}
+	path=${path%\'}
+	open_genome_expand_path "$path"
+}
+
+open_genome_abs_path() {
+	path=$1
+	if command -v realpath >/dev/null 2>&1; then
+		realpath -m "$path"
+	elif test -d "$path"; then
+		CDPATH= cd -- "$path" && pwd
+	else
+		dir=$(dirname -- "$path")
+		base=$(basename -- "$path")
+		printf '%s/%s\n' "$(CDPATH= cd -- "$dir" 2>/dev/null && pwd)" "$base"
+	fi
+}
+
+open_genome_path_roots() {
+	printf '%s\n' "$PWD"
+	test -n "${HOME:-}" && printf '%s\n' "$HOME"
+	for root in /mnt /media "/run/media/${USER:-}"; do
+		test -d "$root" && printf '%s\n' "$root"
+	done
+}
+
+open_genome_candidate_paths() {
+	kind=$1
+	open_genome_path_roots | while IFS= read -r root; do
+		test -d "$root" || continue
+		case "$kind" in
+			dir)
+				find "$root" -maxdepth 4 -type d 2>/dev/null
+				;;
+			file)
+				find "$root" -maxdepth 5 -type f \( \
+					-iname '*.fastq' -o -iname '*.fastq.gz' \
+					-o -iname '*.fq' -o -iname '*.fq.gz' \
+					-o -iname '*.bam' -o -iname '*.cram' \
+					-o -iname '*.vcf' -o -iname '*.vcf.gz' \
+					-o -iname '*.fa' -o -iname '*.fa.gz' \
+					-o -iname '*.fasta' -o -iname '*.fasta.gz' \
+					-o -iname '*.fna' -o -iname '*.fna.gz' \
+				\) 2>/dev/null
+				;;
+			*)
+				find "$root" -maxdepth 4 -type d 2>/dev/null
+				find "$root" -maxdepth 5 -type f \( \
+					-iname '*.fastq' -o -iname '*.fastq.gz' \
+					-o -iname '*.fq' -o -iname '*.fq.gz' \
+					-o -iname '*.bam' -o -iname '*.cram' \
+					-o -iname '*.vcf' -o -iname '*.vcf.gz' \
+					-o -iname '*.fa' -o -iname '*.fa.gz' \
+					-o -iname '*.fasta' -o -iname '*.fasta.gz' \
+					-o -iname '*.fna' -o -iname '*.fna.gz' \
+				\) 2>/dev/null
+				;;
+		esac
+	done | awk '!seen[$0]++' | sort
+}
+
+open_genome_choose_path() {
+	label=$1
+	kind=$2
+	current=${3:-}
+
+	echo "$label" >&2
+	if test -n "$current"; then
+		echo "Current: $current" >&2
+	fi
+
+	choice=
+	if test -t 0 && test -t 1 && command -v fzf >/dev/null 2>&1; then
+		echo "Opening picker. Press Esc to enter a path manually." >&2
+		choice=$(open_genome_candidate_paths "$kind" | fzf --prompt="$label > " --height=80% --reverse --select-1 2>/dev/null) || choice=
+	else
+		if ! command -v fzf >/dev/null 2>&1; then
+			echo "Tip: install fzf for an interactive file and folder picker." >&2
+		fi
+	fi
+
+	if test -z "$choice"; then
+		if test -n "$current"; then
+			echo "Paste a path, or press Enter to keep the current value." >&2
+		else
+			echo "Paste a path to a file or folder." >&2
+		fi
+		printf '> ' >&2
+		read -r choice || true
+	fi
+
+	if test -z "$choice" && test -n "$current"; then
+		choice=$current
+	fi
+
+	if test -z "$choice"; then
+		return 1
+	fi
+
+	choice=$(open_genome_clean_path "$choice")
+	open_genome_abs_path "$choice"
+}
+
+open_genome_existing_file_or_dir() {
+	path=$1
+	test -n "$path" && { test -f "$path" || test -d "$path"; }
+}
+
+open_genome_dataset_root() {
+	path=$1
+	if test -d "$path"; then
+		open_genome_abs_path "$path"
+	elif test -f "$path"; then
+		dir=$(dirname -- "$path")
+		echo "Selected file; using its folder: $dir" >&2
+		open_genome_abs_path "$dir"
+	else
+		return 1
+	fi
+}
+
 # Legacy paths.env (imported once by bootstrap)
 OPEN_GENOME_PATHS_FILE="$OPEN_GENOME_CONFIG_DIR/paths.env"
