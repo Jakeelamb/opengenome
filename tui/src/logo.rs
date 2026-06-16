@@ -7,18 +7,10 @@ use ratatui_image::{
     Resize, StatefulImage,
 };
 
-#[cfg(feature = "bio-logo")]
-use std::time::{Duration, Instant};
-
 const LOGO_TEXT_GAP: u16 = 0;
 const LOGO_ALPHA_CUTOFF: u8 = 10;
 const LOGO_SCALE_NUM: u32 = 70;
 const LOGO_SCALE_DEN: u32 = 100;
-
-#[cfg(feature = "bio-logo")]
-const HELIX_VIRTUAL_SIZE: (u32, u32) = (48, 12);
-#[cfg(feature = "bio-logo")]
-const HELIX_FONT: (u16, u16) = (1, 1);
 
 enum Renderer {
     Protocol {
@@ -39,46 +31,24 @@ pub(crate) struct ImageLogo {
     last_area_size: (u16, u16),
 }
 
-#[cfg(feature = "bio-logo")]
-pub(crate) struct HelixLogo {
-    helix: dna::HelixMini,
-    helix_last_instant: Option<Instant>,
-}
-
 pub enum Logo {
     Image(ImageLogo),
-    #[cfg(feature = "bio-logo")]
-    Helix(HelixLogo),
 }
 
 impl Logo {
     pub fn load() -> Option<Self> {
-        #[cfg(feature = "bio-logo")]
-        {
-            let force_png = std::env::var("OPEN_GENOME_USE_CTT_LOGO").ok().as_deref() == Some("1");
-            if !force_png {
-                return Some(Self::Helix(HelixLogo {
-                    helix: dna::HelixMini::new(0xC0FFEE),
-                    helix_last_instant: None,
-                }));
-            }
-        }
         ImageLogo::load().map(Logo::Image)
     }
 
     pub fn area_height_for_width(&self, width: u16, max_height: u16) -> u16 {
         match self {
             Logo::Image(inner) => inner.area_height_for_width(width, max_height),
-            #[cfg(feature = "bio-logo")]
-            Logo::Helix(inner) => inner.area_height_for_width(width, max_height),
         }
     }
 
     pub fn draw(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
         match self {
             Logo::Image(inner) => inner.draw(frame, area, theme),
-            #[cfg(feature = "bio-logo")]
-            Logo::Helix(inner) => inner.draw(frame, area, theme),
         }
     }
 }
@@ -311,134 +281,5 @@ impl ImageLogo {
         }
         let scaled = (u32::from(width) * LOGO_SCALE_NUM + (LOGO_SCALE_DEN / 2)) / LOGO_SCALE_DEN;
         scaled.clamp(1, u16::MAX as u32) as u16
-    }
-}
-
-#[cfg(feature = "bio-logo")]
-impl HelixLogo {
-    fn area_height_for_width(&self, width: u16, max_height: u16) -> u16 {
-        if width == 0 || max_height == 0 {
-            return 0;
-        }
-        let scaled_width = Self::scaled_width(width);
-        let max_image_height = max_height.saturating_sub(LOGO_TEXT_GAP + 1);
-        if max_image_height == 0 {
-            return max_height.min(1);
-        }
-        let mut image_height = Self::rows_for_width(scaled_width);
-        if image_height > max_image_height {
-            image_height = max_image_height;
-        }
-        image_height + LOGO_TEXT_GAP + 1
-    }
-
-    fn scaled_width(width: u16) -> u16 {
-        if width == 0 {
-            return 0;
-        }
-        let scaled = (u32::from(width) * LOGO_SCALE_NUM + (LOGO_SCALE_DEN / 2)) / LOGO_SCALE_DEN;
-        scaled.clamp(1, u16::MAX as u32) as u16
-    }
-
-    fn rows_for_width(width: u16) -> u16 {
-        let (iw, ih) = HELIX_VIRTUAL_SIZE;
-        let (fw, fh) = HELIX_FONT;
-        if width == 0 || iw == 0 || fw == 0 || fh == 0 {
-            return 0;
-        }
-        let pixel_width = u64::from(width) * u64::from(fw);
-        let scaled_pixel_height = u64::from(ih) * pixel_width / u64::from(iw);
-        let row_height = u64::from(fh);
-        let rows = scaled_pixel_height.div_ceil(row_height);
-        rows.min(u64::from(u16::MAX)) as u16
-    }
-
-    fn width_for_height(height: u16) -> u16 {
-        let (iw, ih) = HELIX_VIRTUAL_SIZE;
-        let (fw, fh) = HELIX_FONT;
-        if height == 0 || ih == 0 || fw == 0 || fh == 0 {
-            return 0;
-        }
-        let pixel_height = u64::from(height) * u64::from(fh);
-        let scaled_pixel_width = u64::from(iw) * pixel_height / u64::from(ih);
-        let col_width = u64::from(fw);
-        let cols = scaled_pixel_width.div_ceil(col_width);
-        cols.min(u64::from(u16::MAX)) as u16
-    }
-
-    fn draw_size(width: u16, max_height: u16) -> (u16, u16) {
-        if width == 0 || max_height == 0 {
-            return (0, 0);
-        }
-        let scaled_width = Self::scaled_width(width);
-        let mut draw_width = scaled_width;
-        let mut draw_height = Self::rows_for_width(draw_width);
-        if draw_height > max_height {
-            draw_height = max_height;
-            draw_width = Self::width_for_height(draw_height).min(scaled_width);
-        }
-        (draw_width, draw_height)
-    }
-
-    fn draw(&mut self, frame: &mut Frame, area: Rect, theme: &Theme) {
-        if area.height == 0 || area.width == 0 {
-            return;
-        }
-
-        let max_image_height = area.height.saturating_sub(LOGO_TEXT_GAP + 1);
-        let (draw_width, draw_height) = Self::draw_size(area.width, max_image_height);
-
-        if draw_width > 0 && draw_height > 0 {
-            let centered_x = area.x + area.width.saturating_sub(draw_width) / 2;
-            let max_x = area.x + area.width.saturating_sub(draw_width);
-            let image_x = centered_x.min(max_x);
-            let image_area = Rect::new(image_x, area.y, draw_width, draw_height);
-
-            let now = Instant::now();
-            let elapsed = match self.helix_last_instant.replace(now) {
-                None => Duration::from_secs_f32(33.0 / 1000.0),
-                Some(prev) => now
-                    .saturating_duration_since(prev)
-                    .min(Duration::from_millis(250)),
-            };
-            self.helix.tick_elapsed(1.0, elapsed);
-            let gw = draw_width as usize;
-            let gh = draw_height as usize;
-            let grid = self.helix.render_grid(gw, gh, 1.0);
-            let mut cached_lines: Vec<Line<'static>> = Vec::with_capacity(gh);
-            for row in grid {
-                let mut spans = Vec::with_capacity(gw);
-                for cell in row {
-                    match cell {
-                        None => spans.push(Span::raw(" ")),
-                        Some((ch, r, g, b)) => spans.push(Span::styled(
-                            ch.to_string(),
-                            Style::default().fg(Color::Rgb(r, g, b)),
-                        )),
-                    }
-                }
-                cached_lines.push(Line::from(spans));
-            }
-
-            frame.render_widget(
-                Paragraph::new(Text::from(cached_lines)).alignment(Alignment::Center),
-                image_area,
-            );
-        }
-
-        let text_y = if draw_height > 0 {
-            area.y + draw_height + LOGO_TEXT_GAP
-        } else {
-            area.y
-        };
-        if text_y < area.y + area.height {
-            let text_area = Rect::new(area.x, text_y, area.width, 1);
-            let label = Line::styled(
-                format!("Open Genome v{}", env!("CARGO_PKG_VERSION")),
-                Style::default().fg(theme.tab_color()).bold(),
-            );
-            let text = Paragraph::new(label).alignment(Alignment::Center);
-            frame.render_widget(text, text_area);
-        }
     }
 }

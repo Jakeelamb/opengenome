@@ -8,15 +8,7 @@ Terminal utility for genomics workflows, built on the [Linutil](https://github.c
 cargo run -p linutil_tui
 ```
 
-By default the TUI links the [dna](https://github.com/Jakeelamb/dna) crate via a path dependency: from this repo’s root, that resolves to **`../dinosauria/dna`** (for example `~/Projects/genome_os` and `~/Projects/dinosauria/dna`). If `genome_os` lives next to `dna` under the same parent (e.g. `~/Projects/dinosauria/genome_os` and `~/Projects/dinosauria/dna`), change the path in `tui/Cargo.toml` to `../dna`. Set `OPEN_GENOME_USE_CTT_LOGO=1` to use the embedded PNG instead.
-
-If you only have this repository (no sibling checkout), disable the default helix dependency:
-
-```bash
-cargo run -p linutil_tui --no-default-features --features tips
-```
-
-The Nix package builds the same way (PNG logo only): `nix build .#default`.
+The TUI uses the bundled PNG logo and does not require a sibling checkout or private path dependency. The Nix package builds the same way: `nix build .#default`.
 
 Release binary (workspace default):
 
@@ -39,9 +31,18 @@ Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmat
 - **Privacy:** local-only user data by default. Public tools, references, and pipelines may be downloaded; reads/BAMs/VCFs/logs are not uploaded.
 - **Paths:** `paths.reference`, `paths.dataset`, `paths.workdir`, `paths.threads`.
 - **Conda:** Open Genome can install private Miniforge/Conda under `$XDG_DATA_HOME/open-genome/miniforge`, or use `conda.conda_exe`.
-- **Samples:** Setup can scan a folder of paired FASTQ/FASTQ.gz or existing BAM/CRAM/VCF files and write a local nf-core/sarek samplesheet.
-- **Reference/workflow:** Assembly actions fetch the public GATK GRCh38 bundle, index it locally, prepare an nf-core/sarek 3.8.1 germline command, and run/resume it with the Conda profile.
-- **Environment:** the main `opengenome` conda spec lives at [core/tabs/open-genome/modules/opengenome/environment.yml](core/tabs/open-genome/modules/opengenome/environment.yml). Legacy per-tool module specs remain under [core/tabs/open-genome/modules/](core/tabs/open-genome/modules/) for fallback/debugging.
+- **Samples:** Setup can scan paired FASTQ/FASTQ.gz, existing BAM/CRAM, existing VCF, or user-provided assembly files, including mixed folders. It writes row-id based native Open Genome samplesheets plus a Sarek-compatible sheet for the advanced external workflow.
+- **Reference/workflow:** Assembly actions fetch the public GATK GRCh38 bundle, index it locally, prepare the native Open Genome Nextflow pipeline, and run/resume it through the single `opengenome` conda environment. Sarek remains available as an advanced external workflow.
+- **Reports:** The native workflow stages exact process outputs into the report compiler, then emits per-row HTML/TSV/JSON evidence with explicit limitations and PGx/annotation status. The base env includes lightweight `gfastats`; heavier report tools such as QUAST, VEP, and full PharmCAT installation are treated as optional/on-demand.
+- **Environment:** the main `opengenome` conda spec lives at [core/tabs/open-genome/modules/opengenome/environment.yml](core/tabs/open-genome/modules/opengenome/environment.yml). It is the source of truth for fresh core installs. IGV is kept in the separate `og-genome-browser` module because current GATK packages require Java 17 while current IGV requires Java 21. Legacy per-tool module specs remain under [core/tabs/open-genome/modules/](core/tabs/open-genome/modules/) for fallback/debugging.
+
+## Verification
+
+```bash
+scripts/check-genomics.sh
+```
+
+This runs the Python scanner/report tests, shell syntax checks, Rust tab metadata test, and a native Nextflow stub smoke test when Nextflow is available directly or through `conda run -n opengenome`.
 
 Legacy `paths.env` is imported **once** on bootstrap only if the manifest path fields are still empty. Example templates: [examples/open-genome.manifest.toml](examples/open-genome.manifest.toml), [examples/open-genome.paths.env](examples/open-genome.paths.env).
 

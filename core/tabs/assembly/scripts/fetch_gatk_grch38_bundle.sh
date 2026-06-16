@@ -46,19 +46,40 @@ download_one() {
 	name=$1
 	dest="$bundle_dir/$name"
 	if test -s "$dest"; then
-		echo "exists: $dest"
-		return 0
+		if case "$dest" in *.gz) gzip -t "$dest" ;; *) true ;; esac; then
+			echo "exists: $dest"
+			return 0
+		fi
+		echo "invalid existing file, redownloading: $dest"
 	fi
 	url="$base_url/$name"
+	tmp="$dest.tmp.$$"
+	rm -f "$tmp"
 	echo "download: $url"
 	if command -v curl >/dev/null 2>&1; then
-		curl -L --fail --show-error --continue-at - --output "$dest" "$url"
+		curl -L --fail --show-error --output "$tmp" "$url"
 	elif command -v wget >/dev/null 2>&1; then
-		wget -c -O "$dest" "$url"
+		wget -O "$tmp" "$url"
 	else
 		echo "curl or wget is required." >&2
 		exit 1
 	fi
+	if ! test -s "$tmp"; then
+		echo "Downloaded file is empty: $url" >&2
+		rm -f "$tmp"
+		exit 1
+	fi
+	case "$tmp" in
+		*.gz.*) ;;
+		*.gz)
+			if ! gzip -t "$tmp"; then
+				echo "Downloaded gzip failed validation: $url" >&2
+				rm -f "$tmp"
+				exit 1
+			fi
+			;;
+	esac
+	mv -f "$tmp" "$dest"
 }
 
 for file in $files; do

@@ -26,7 +26,7 @@ task_list = "REF PIPE"
 multi_select = false
 
 [[data]]
-name = "Sarek germline workflow"
+name = "Open Genome native workflow"
 multi_select = false
 
 [[data.entries]]
@@ -37,15 +37,33 @@ task_list = "CHK PIPE"
 multi_select = false
 
 [[data.entries]]
+name = "Prepare Open Genome native run"
+description = "Generates the local Open Genome Nextflow command for FASTQ, BAM/CRAM, or VCF inputs."
+script = "scripts/prepare_open_genome_run.sh"
+task_list = "CFG PIPE"
+multi_select = false
+
+[[data.entries]]
+name = "Run / resume Open Genome native workflow"
+description = "Runs the generated local Open Genome pipeline with -resume through the opengenome conda environment."
+script = "scripts/run_open_genome.sh"
+task_list = "PIPE DATA"
+multi_select = false
+
+[[data]]
+name = "Sarek external workflow"
+multi_select = false
+
+[[data.entries]]
 name = "Prepare Sarek germline run"
-description = "Generates a local nf-core/sarek command using the scanned samplesheet and configured GRCh38 resources."
+description = "Advanced: generates a local nf-core/sarek command using the Sarek-compatible samplesheet and configured GRCh38 resources."
 script = "scripts/prepare_sarek_run.sh"
 task_list = "CFG PIPE"
 multi_select = false
 
 [[data.entries]]
 name = "Run / resume Sarek germline workflow"
-description = "Runs the generated local nf-core/sarek command with -resume and the conda profile."
+description = "Advanced: runs the generated local nf-core/sarek command with -resume and the conda profile."
 script = "scripts/run_sarek.sh"
 task_list = "PIPE DATA"
 multi_select = false

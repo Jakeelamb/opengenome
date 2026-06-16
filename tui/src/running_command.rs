@@ -11,8 +11,9 @@ use ratatui::{
     widgets::Block,
 };
 use std::{
-    fs::File,
+    fs::OpenOptions,
     io::{Read, Result, Write},
+    os::unix::fs::OpenOptionsExt,
     sync::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
@@ -357,7 +358,11 @@ impl RunningCommand {
                 .unwrap()
         ));
 
-        let mut file = File::create(&log_path)?;
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .mode(0o600)
+            .open(&log_path)?;
         let buffer = self.buffer.lock().unwrap();
         file.write_all(&buffer)?;
 

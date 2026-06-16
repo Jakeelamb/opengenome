@@ -3,6 +3,6 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
-  - igv>=2.17.0
-  - openjdk>=17.0.0,<22
+  - igv>=2.19,<2.21
+  - openjdk>=21,<22
   - ca-certificates

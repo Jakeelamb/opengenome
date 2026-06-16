@@ -13,11 +13,19 @@ if test -z "$root"; then
 	root="$(open_genome_data_dir)/miniforge"
 fi
 
+miniforge_version="26.3.2-3"
+expected_sha=""
 case "$(uname -s)-$(uname -m)" in
-	Linux-x86_64) asset="Miniforge3-Linux-x86_64.sh" ;;
-	Linux-aarch64 | Linux-arm64) asset="Miniforge3-Linux-aarch64.sh" ;;
-	Darwin-x86_64) asset="Miniforge3-MacOSX-x86_64.sh" ;;
-	Darwin-arm64) asset="Miniforge3-MacOSX-arm64.sh" ;;
+	Linux-x86_64)
+		asset="Miniforge3-${miniforge_version}-Linux-x86_64.sh"
+		expected_sha="848194851a98903134187fbb4ab50efe87b003e0c0f808f97644b7524a62bf2c"
+		;;
+	Linux-aarch64 | Linux-arm64)
+		asset="Miniforge3-${miniforge_version}-Linux-aarch64.sh"
+		expected_sha="2c113a69297e612b01ca0f320c22a3107a11f2ab9b573d79ac868a175945ce29"
+		;;
+	Darwin-x86_64) asset="Miniforge3-${miniforge_version}-MacOSX-x86_64.sh" ;;
+	Darwin-arm64) asset="Miniforge3-${miniforge_version}-MacOSX-arm64.sh" ;;
 	*)
 		echo "Unsupported platform for automatic Miniforge install: $(uname -s)-$(uname -m)" >&2
 		exit 1
@@ -43,7 +51,7 @@ else
 	tmp_dir=$(mktemp -d)
 	trap 'rm -rf "$tmp_dir"' EXIT
 	installer="$tmp_dir/$asset"
-	url="https://github.com/conda-forge/miniforge/releases/latest/download/$asset"
+		url="https://github.com/conda-forge/miniforge/releases/download/$miniforge_version/$asset"
 	if command -v curl >/dev/null 2>&1; then
 		curl -L --fail --show-error --output "$installer" "$url"
 	elif command -v wget >/dev/null 2>&1; then
@@ -52,7 +60,19 @@ else
 		echo "curl or wget is required to download Miniforge." >&2
 		exit 1
 	fi
-	bash "$installer" -b -p "$root"
+		if test -n "$expected_sha"; then
+			actual_sha=$(sha256sum "$installer" | awk '{print $1}')
+			if test "$actual_sha" != "$expected_sha"; then
+				echo "Miniforge checksum mismatch for $asset" >&2
+				echo "Expected: $expected_sha" >&2
+				echo "Actual:   $actual_sha" >&2
+				exit 1
+			fi
+		else
+			echo "No pinned checksum for this platform; refusing to execute downloaded installer." >&2
+			exit 1
+		fi
+		bash "$installer" -b -p "$root"
 fi
 
 if test -x "$conda_bin"; then

@@ -8,7 +8,10 @@ _OG_LIB_DIR=$(CDPATH= cd -- "$HERE/../../setup/scripts" && pwd)
 
 open_genome_bootstrap_manifest
 workdir=$(open_genome_workdir)
-samplesheet=$(open_genome_manifest_get sample.samplesheet)
+samplesheet=$(open_genome_manifest_get sample.sarek_samplesheet)
+if test -z "$samplesheet"; then
+	samplesheet=$(open_genome_manifest_get sample.samplesheet)
+fi
 fasta=$(open_genome_manifest_get reference.fasta)
 fai=$(open_genome_manifest_get reference.fai)
 dict=$(open_genome_manifest_get reference.dict)
@@ -16,10 +19,20 @@ dbsnp=$(open_genome_manifest_get reference.dbsnp)
 known_indels=$(open_genome_manifest_get reference.known_indels)
 known_snps=$(open_genome_manifest_get reference.thousand_genomes_snps)
 version=$(open_genome_manifest_get workflow.sarek_version)
-runtime=$(open_genome_manifest_get workflow.runtime)
+runtime=$(open_genome_manifest_get workflow.sarek_runtime)
+if test -z "$runtime"; then
+	runtime=$(open_genome_manifest_get workflow.runtime)
+fi
 threads=$(open_genome_paths_get threads)
 test -n "$version" || version="3.8.1"
 test -n "$runtime" || runtime="conda"
+case "$runtime" in
+	conda | docker | singularity | apptainer) ;;
+	*)
+		echo "Unsupported Sarek profile '$runtime'; using conda." >&2
+		runtime=conda
+		;;
+esac
 
 for required in samplesheet fasta fai dict dbsnp known_indels known_snps; do
 	eval "value=\${$required}"
@@ -64,6 +77,7 @@ genome=GATK.GRCh38
 igenomes_ignore=true
 save_mapped=true
 save_output_as_bam=false
+skip_tools=multiqc
 EOF
 
 {
@@ -71,6 +85,7 @@ EOF
 	printf 'set -euo pipefail\n'
 	printf 'export NXF_HOME=%q\n' "$workdir/.nextflow"
 	printf 'export NXF_CONDA_CACHEDIR=%q\n' "$workdir/nextflow-conda-cache"
+	printf 'export NXF_SYNTAX_PARSER="${NXF_SYNTAX_PARSER:-v1}"\n'
 	conda_exe=$(open_genome_manifest_get conda.conda_exe)
 	if test -n "$conda_exe"; then
 		printf 'export PATH=%q:$PATH\n' "$(dirname "$conda_exe")"
@@ -92,14 +107,15 @@ EOF
 	printf '  --aligner bwa-mem \\\n'
 	printf '  --genome GATK.GRCh38 \\\n'
 	printf '  --igenomes_ignore \\\n'
-	printf '  --save_mapped\n'
+	printf '  --save_mapped \\\n'
+	printf '  --skip_tools multiqc\n'
 } >"$command_file"
 chmod 700 "$command_file"
 
 open_genome_manifest_set paths.reference "$fasta"
 open_genome_manifest_set workflow.engine sarek
 open_genome_manifest_set workflow.sarek_version "$version"
-open_genome_manifest_set workflow.runtime "$runtime"
+open_genome_manifest_set workflow.sarek_runtime "$runtime"
 open_genome_manifest_set workflow.outdir "$outdir"
 open_genome_manifest_set workflow.params_file "$params_file"
 open_genome_manifest_set workflow.command_file "$command_file"

@@ -2,7 +2,8 @@
 # Open Genome helpers. Each caller must set _OG_LIB_DIR to this file's directory before sourcing.
 # Example: _OG_LIB_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd); . "$_OG_LIB_DIR/open_genome_lib.sh"
 
-OPEN_GENOME_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/open-genome"
+OPEN_GENOME_CONFIG_DIR="${OPEN_GENOME_CONFIG_DIR:-${XDG_CONFIG_HOME:-$HOME/.config}/open-genome}"
+umask 077
 
 if test -z "${_OG_LIB_DIR:-}"; then
 	echo "open_genome_lib.sh: set _OG_LIB_DIR to the directory containing this file before sourcing." >&2

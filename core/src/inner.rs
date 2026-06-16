@@ -305,6 +305,24 @@ mod tab_directories_tests {
 
         drop(temp_dir);
     }
+
+    #[test]
+    fn test_embedded_open_genome_tabs_parse_and_resolve_scripts() {
+        let tabs = get_tabs(false);
+        let names: Vec<_> = tabs.iter().map(|tab| tab.name.as_str()).collect();
+
+        assert!(names.contains(&"Setup"));
+        assert!(names.contains(&"Assembly"));
+        assert!(names.contains(&"Visualization"));
+        assert!(tabs
+            .iter()
+            .flat_map(|tab| tab.tree.root().descendants())
+            .any(|node| node.value().name == "Prepare Open Genome native run"));
+        assert!(tabs
+            .iter()
+            .flat_map(|tab| tab.tree.root().descendants())
+            .any(|node| node.value().name == "Summarize local workflow outputs"));
+    }
 }
 
 #[cfg(test)]

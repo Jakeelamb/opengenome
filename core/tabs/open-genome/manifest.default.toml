@@ -23,9 +23,11 @@ local_only = true
 input_dir = ""
 sample_id = ""
 patient_id = ""
+input_type = ""
 sex = "NA"
 status = "0"
 samplesheet = ""
+sarek_samplesheet = ""
 
 [reference]
 profile = "gatk_grch38"
@@ -40,9 +42,12 @@ mills_indels = ""
 thousand_genomes_snps = ""
 
 [workflow]
-engine = "sarek"
+engine = "opengenome"
+pipeline_version = "v1"
 sarek_version = "3.8.1"
 runtime = "conda"
+native_profile = "opengenome"
+sarek_runtime = "conda"
 outdir = ""
 params_file = ""
 command_file = ""
@@ -52,6 +57,19 @@ last_run_dir = ""
 summary_file = ""
 multiqc_dir = ""
 variant_stats_file = ""
+report_dir = ""
+report_html = ""
+findings_tsv = ""
+evidence_json = ""
+
+[cache]
+root = ""
+release_manifest = ""
+clinvar_vcf = ""
+clinvar_tbi = ""
+dbsnp_vcf = ""
+dbsnp_tbi = ""
+pharmcat_jar = ""
 
 # Module ids match directories under open-genome/modules/<id>/
 

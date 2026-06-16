@@ -7,9 +7,9 @@ workdir = "/data/work/open-genome"
 threads = "32"
 
 [conda]
-prefer_mamba = true
+prefer_mamba = false
 install_root = "/home/user/.local/share/open-genome/miniforge"
-conda_exe = "/home/user/.local/share/open-genome/miniforge/bin/mamba"
+conda_exe = "/home/user/.local/share/open-genome/miniforge/bin/conda"
 
 [privacy]
 local_only = true
@@ -18,9 +18,11 @@ local_only = true
 input_dir = "/data/runs/sample42"
 sample_id = "sample42"
 patient_id = "sample42"
+input_type = "fastq"
 sex = "NA"
 status = "0"
-samplesheet = "/data/work/open-genome/samples/sarek_samplesheet.csv"
+samplesheet = "/data/work/open-genome/samples/open_genome_samplesheet.csv"
+sarek_samplesheet = "/data/work/open-genome/samples/sarek_samplesheet.csv"
 
 [reference]
 profile = "gatk_grch38"
@@ -35,18 +37,34 @@ mills_indels = "/data/refs/gatk_grch38/Mills_and_1000G_gold_standard.indels.hg38
 thousand_genomes_snps = "/data/refs/gatk_grch38/1000G_phase1.snps.high_confidence.hg38.vcf.gz"
 
 [workflow]
-engine = "sarek"
+engine = "opengenome"
+pipeline_version = "v1"
 sarek_version = "3.8.1"
 runtime = "conda"
-outdir = "/data/work/open-genome/sarek-results"
-params_file = "/data/work/open-genome/sarek-open-genome.params.txt"
-command_file = "/data/work/open-genome/bin/run_sarek_open_genome.sh"
-last_run_dir = "/data/work/open-genome/nextflow-work"
+native_profile = "opengenome"
+sarek_runtime = "conda"
+outdir = "/data/work/open-genome/open-genome-results"
+params_file = "/data/work/open-genome/open-genome.params.txt"
+command_file = "/data/work/open-genome/bin/run_open_genome_pipeline.sh"
+last_run_dir = "/data/work/open-genome/nextflow-work-opengenome"
 
 [results]
 summary_file = "/data/work/open-genome/results/open-genome-summary.txt"
-multiqc_dir = "/data/work/open-genome/sarek-results/multiqc"
+multiqc_dir = "/data/work/open-genome/open-genome-results/qc/multiqc"
 variant_stats_file = "/data/work/open-genome/results/sample42.vcf.gz.bcftools-stats.txt"
+report_dir = "/data/work/open-genome/open-genome-results/report"
+report_html = "/data/work/open-genome/open-genome-results/report/open_genome_report.html"
+findings_tsv = "/data/work/open-genome/open-genome-results/report/findings.tsv"
+evidence_json = "/data/work/open-genome/open-genome-results/report/evidence.json"
+
+[cache]
+root = "/data/work/open-genome/cache"
+release_manifest = "/data/work/open-genome/cache/cache_manifest.json"
+clinvar_vcf = "/data/work/open-genome/cache/clinvar/clinvar.GRCh38.vcf.gz"
+clinvar_tbi = "/data/work/open-genome/cache/clinvar/clinvar.GRCh38.vcf.gz.tbi"
+dbsnp_vcf = "/data/refs/gatk_grch38/dbsnp_146.hg38.vcf.gz"
+dbsnp_tbi = "/data/refs/gatk_grch38/dbsnp_146.hg38.vcf.gz.tbi"
+pharmcat_jar = ""
 
 [[modules]]
 id = "sratoolkit"

@@ -15,10 +15,6 @@ rustPlatform.buildRustPackage {
 
   cargoLock.lockFile = ../Cargo.lock;
 
-  # Default Cargo features pull in optional path dep `dna` at ../../dinosauria/dna; not in Nix src tree.
-  buildNoDefaultFeatures = true;
-  buildFeatures = [ "tips" ];
-
   meta = {
     inherit (pTUI) description;
     homepage = pTUI.documentation;

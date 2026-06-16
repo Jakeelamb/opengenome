@@ -13,7 +13,7 @@ multi_select = false
 
 [[data.entries]]
 name = "Import sequencing files"
-description = "Find FASTQ, BAM, CRAM, or VCF files and save a local Sarek samplesheet."
+description = "Find FASTQ, BAM, CRAM, VCF, or assembly files and save Open Genome plus Sarek-compatible samplesheets."
 script = "scripts/scan_sequencing_folder.sh"
 task_list = "CFG DATA"
 multi_select = false
@@ -38,7 +38,7 @@ multi_select = false
 
 [[data.entries]]
 name = "Install / update: Open Genome env"
-description = "Installs one conda environment with workflow, GATK/Picard, QC, SRA, NCBI, genomic tools, and IGV."
+description = "Installs the core Open Genome conda environment with workflow, GATK/Picard, QC, SRA, NCBI, and genomic tools."
 script = "scripts/conda_install_all_recommended.sh"
 task_list = "ENV"
 multi_select = false
@@ -87,7 +87,7 @@ multi_select = false
 
 [[data.entries]]
 name = "Install one env: Open Genome toolbox"
-description = "One conda environment for workflow, GATK/Picard, QC, SRA, NCBI, genomic tools, and IGV."
+description = "One conda environment for workflow, GATK/Picard, QC, SRA, NCBI, and genomic tools. IGV is separate."
 script = "scripts/conda_install_opengenome.sh"
 task_list = "ENV"
 multi_select = false

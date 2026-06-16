@@ -22,4 +22,9 @@ task_list = "DATA"
 [[data.entries]]
 name = "gnomAD / ClinVar / dbSNP links"
 command = "echo \"gnomAD: https://gnomad.broadinstitute.org/ | ClinVar: https://www.ncbi.nlm.nih.gov/clinvar/ | dbSNP: https://www.ncbi.nlm.nih.gov/snp/\""
-task_list = "DATA"
+
+[[data.entries]]
+name = "Set up local annotation cache"
+description = "Downloads public ClinVar GRCh38 annotations and records local dbSNP/ClinVar cache paths."
+script = "scripts/setup_annotation_cache.sh"
+task_list = "DATA CFG"

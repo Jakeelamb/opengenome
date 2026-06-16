@@ -5,8 +5,8 @@ name = "Local result summary"
 multi_select = false
 
 [[data.entries]]
-name = "Summarize Sarek outputs"
-description = "Lists local MultiQC reports, BAM/CRAM files, VCFs, and bcftools stats when available."
+name = "Summarize local workflow outputs"
+description = "Lists local Open Genome or Sarek reports, BAM/CRAM files, VCFs, and bcftools stats when available."
 script = "scripts/results_summary.sh"
 task_list = "DATA"
 
@@ -26,10 +26,10 @@ multi_select = false
 
 [[data.entries]]
 name = "Preview VCF / table"
-command = "echo \"Use Visualization -> Summarize Sarek outputs for VCF paths and bcftools stats.\""
+command = "echo \"Use Visualization -> Summarize local workflow outputs for VCF paths and bcftools stats.\""
 task_list = "DATA"
 
 [[data.entries]]
 name = "Export for downstream"
-command = "echo \"Open Genome keeps outputs local under the configured Sarek output directory.\""
+command = "echo \"Open Genome keeps outputs local under the configured output directory.\""
 task_list = "DATA"

@@ -41,6 +41,7 @@ def _write_str_section(lines: list[str], title: str, values: dict, keys: tuple[s
 
 def _write_manifest(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
+    path.parent.chmod(0o700)
     lines: list[str] = []
     lines.append("# Open Genome - local paths, sample metadata, workflow state, and enabled module ids.")
     lines.append("")
@@ -65,7 +66,7 @@ def _write_manifest(path: Path, data: dict) -> None:
         lines,
         "sample",
         sample,
-        ("input_dir", "sample_id", "patient_id", "sex", "status", "samplesheet"),
+        ("input_dir", "sample_id", "patient_id", "input_type", "sex", "status", "samplesheet", "sarek_samplesheet"),
     )
 
     reference = data.setdefault("reference", {})
@@ -88,7 +89,8 @@ def _write_manifest(path: Path, data: dict) -> None:
 
     workflow = data.setdefault("workflow", {})
     for key, default in (
-        ("engine", "sarek"),
+        ("engine", "opengenome"),
+        ("pipeline_version", "v1"),
         ("sarek_version", "3.8.1"),
         ("runtime", "conda"),
     ):
@@ -97,18 +99,44 @@ def _write_manifest(path: Path, data: dict) -> None:
         lines,
         "workflow",
         workflow,
-        ("engine", "sarek_version", "runtime", "outdir", "params_file", "command_file", "last_run_dir"),
+        (
+            "engine",
+            "pipeline_version",
+            "sarek_version",
+            "runtime",
+            "native_profile",
+            "sarek_runtime",
+            "outdir",
+            "params_file",
+            "command_file",
+            "last_run_dir",
+        ),
     )
 
     results = data.setdefault("results", {})
-    _write_str_section(lines, "results", results, ("summary_file", "multiqc_dir", "variant_stats_file"))
+    _write_str_section(
+        lines,
+        "results",
+        results,
+        ("summary_file", "multiqc_dir", "variant_stats_file", "report_dir", "report_html", "findings_tsv", "evidence_json"),
+    )
+
+    cache = data.setdefault("cache", {})
+    _write_str_section(
+        lines,
+        "cache",
+        cache,
+        ("root", "release_manifest", "clinvar_vcf", "clinvar_tbi", "dbsnp_vcf", "dbsnp_tbi", "pharmcat_jar"),
+    )
 
     for m in data.get("modules", []):
         lines.append("[[modules]]")
         lines.append(f'id = "{_escape_toml_basic(str(m.get("id", "")))}"')
         lines.append(f"enabled = {str(bool(m.get('enabled', True))).lower()}")
         lines.append("")
-    path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines).rstrip() + "\n")
 
 
 def _deep_set(data: dict, dotted: str, value: str) -> None:
@@ -146,8 +174,10 @@ def main(argv: list[str]) -> int:
             return 2
         default_path = Path(argv[2])
         user.parent.mkdir(parents=True, exist_ok=True)
+        user.parent.chmod(0o700)
         if not user.exists():
             shutil.copy(default_path, user)
+            user.chmod(0o600)
             print(f"Wrote {user}")
         else:
             print(f"Exists: {user} (unchanged)")
@@ -160,8 +190,10 @@ def main(argv: list[str]) -> int:
             return 2
         default_path = Path(argv[2])
         user.parent.mkdir(parents=True, exist_ok=True)
+        user.parent.chmod(0o700)
         if not user.exists():
             shutil.copy(default_path, user)
+            user.chmod(0o600)
             print(f"Wrote {user}")
         legacy = user.parent / "paths.env"
         if legacy.is_file():
@@ -213,7 +245,7 @@ def main(argv: list[str]) -> int:
         privacy = data.get("privacy", {})
         print(f"  privacy.local_only={privacy.get('local_only', True)}")
         sample = data.get("sample", {})
-        for k in ("input_dir", "sample_id", "patient_id", "sex", "status", "samplesheet"):
+        for k in ("input_dir", "sample_id", "patient_id", "input_type", "sex", "status", "samplesheet", "sarek_samplesheet"):
             print(f"  sample.{k}={sample.get(k, '')!r}")
         reference = data.get("reference", {})
         for k in (
@@ -230,11 +262,14 @@ def main(argv: list[str]) -> int:
         ):
             print(f"  reference.{k}={reference.get(k, '')!r}")
         workflow = data.get("workflow", {})
-        for k in ("engine", "sarek_version", "runtime", "outdir", "params_file", "command_file", "last_run_dir"):
+        for k in ("engine", "pipeline_version", "sarek_version", "runtime", "native_profile", "sarek_runtime", "outdir", "params_file", "command_file", "last_run_dir"):
             print(f"  workflow.{k}={workflow.get(k, '')!r}")
         results = data.get("results", {})
-        for k in ("summary_file", "multiqc_dir", "variant_stats_file"):
+        for k in ("summary_file", "multiqc_dir", "variant_stats_file", "report_dir", "report_html", "findings_tsv", "evidence_json"):
             print(f"  results.{k}={results.get(k, '')!r}")
+        cache = data.get("cache", {})
+        for k in ("root", "release_manifest", "clinvar_vcf", "clinvar_tbi", "dbsnp_vcf", "dbsnp_tbi", "pharmcat_jar"):
+            print(f"  cache.{k}={cache.get(k, '')!r}")
         for m in data.get("modules", []):
             print(f"  module {m.get('id')} enabled={m.get('enabled', True)}")
         return 0

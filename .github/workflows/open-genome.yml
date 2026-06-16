@@ -1,0 +1,37 @@
+name: Open Genome Checks
+
+on:
+  pull_request:
+    paths:
+      - 'core/tabs/**'
+      - 'core/src/**'
+      - 'tui/src/**'
+      - 'scripts/check-genomics.sh'
+      - '.github/workflows/open-genome.yml'
+      - 'examples/**'
+      - 'README.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  genomics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Java for Nextflow
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Nextflow
+        run: |
+          curl -fsSL https://get.nextflow.io -o nextflow
+          chmod +x nextflow
+          sudo mv nextflow /usr/local/bin/nextflow
+
+      - name: Run Open Genome verification
+        run: scripts/check-genomics.sh

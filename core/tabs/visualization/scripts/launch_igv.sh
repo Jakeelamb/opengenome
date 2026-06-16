@@ -12,9 +12,9 @@ outdir=$(open_genome_manifest_get workflow.outdir)
 workdir=$(open_genome_workdir)
 test -n "$outdir" || outdir="$workdir/sarek-results"
 
-echo "Launching IGV from local conda environment."
+echo "Launching IGV from the optional genome browser conda environment."
 echo "Reference: ${fasta:-unset}"
 echo "Results:   $outdir"
 echo ""
 echo "Open BAM/CRAM/VCF files from the results directory inside IGV."
-open_genome_conda_run opengenome igv
+open_genome_conda_run og-genome-browser igv

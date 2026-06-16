@@ -1,0 +1,19 @@
+name = "Reports"
+
+[[data]]
+name = "Free V1 report plan"
+multi_select = false
+
+[[data.entries]]
+name = "Show free report sources"
+description = "Lists the free tools and public datasets Open Genome can use for digestible reports without hiding raw evidence."
+script = "scripts/free_v1_sources.sh"
+task_list = "DATA CHK"
+multi_select = false
+
+[[data.entries]]
+name = "Show report boundaries"
+description = "Shows what Open Genome should report now, what should stay experimental, and what needs careful disclaimers."
+script = "scripts/report_boundaries.sh"
+task_list = "DATA CHK"
+multi_select = false

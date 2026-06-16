@@ -20,14 +20,10 @@ name = "linutil"
 path = "src/main.rs"
 
 [features]
-default = ["tips", "bio-logo"]
+default = ["tips"]
 tips = []
-# DNA helix preview from ../../dinosauria/dna (`dna` crate). Set OPEN_GENOME_USE_CTT_LOGO=1 to keep PNG.
-# Build without that checkout: cargo build -p linutil_tui --no-default-features --features tips
-bio-logo = ["dep:dna"]
 
 [dependencies]
-dna = { path = "../../dinosauria/dna", optional = true }
 clap = { version = "4.6.1", features = ["derive"] }
 image = { version = "0.25.10", default-features = false, features = ["ico", "png"] }
 linutil_core = { version = "26.5.21", path = "../core" }

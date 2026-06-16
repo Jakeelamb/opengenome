@@ -47,15 +47,15 @@ task_list = "CHK"
 multi_select = false
 
 [[data.entries]]
-name = "Prepare Sarek/GATK HaplotypeCaller workflow"
-description = "Use the Assembly tab action to generate the nf-core/sarek germline command with HaplotypeCaller."
-command = "echo \"Use Assembly -> Prepare Sarek germline run. It generates a local nf-core/sarek HaplotypeCaller command.\""
+name = "Prepare Open Genome/GATK workflow"
+description = "Use the Assembly tab action to generate the native Open Genome pipeline command."
+command = "echo \"Use Assembly -> Prepare Open Genome native run. It generates a local FASTQ/BAM/VCF pipeline command.\""
 task_list = "PIPE DATA"
 
 [[data.entries]]
-name = "Run / resume Sarek/GATK HaplotypeCaller"
-description = "Use the Assembly tab action to execute the prepared Sarek command."
-command = "echo \"Use Assembly -> Run / resume Sarek germline workflow.\""
+name = "Run / resume Open Genome/GATK workflow"
+description = "Use the Assembly tab action to execute the prepared native Open Genome command."
+command = "echo \"Use Assembly -> Run / resume Open Genome native workflow.\""
 task_list = "PIPE DATA"
 
 [[data.entries]]

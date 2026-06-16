@@ -43,4 +43,4 @@ esac
 
 echo ""
 echo "Current Open Genome setup:"
-python3 "$OPEN_GENOME_MANIFEST_CLI" show
+sh "$HERE/show_paths.sh"
