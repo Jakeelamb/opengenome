@@ -1,5 +1,6 @@
 use crate::{
     confirmation::{ConfirmPrompt, ConfirmStatus},
+    file_picker::{FilePicker, FilePickerMode},
     filter::{Filter, SearchAction},
     float::{Float, FloatContent},
     floating_text::FloatingText,
@@ -7,6 +8,7 @@ use crate::{
     logo::Logo,
     root::check_root_status,
     running_command::RunningCommand,
+    setup_wizard::{SetupWizard, SetupWizardStarts},
     shortcuts,
     system_info::SystemInfo,
     theme::Theme,
@@ -20,7 +22,10 @@ use ratatui::{
     symbols::border,
     widgets::{Block, List, ListState, Padding, Paragraph},
 };
-use std::rc::Rc;
+use std::{
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
 const MIN_WIDTH: u16 = 100;
 const MIN_HEIGHT: u16 = 25;
@@ -32,7 +37,7 @@ const LIST_HIGHLIGHT_SYMBOL: &str = "> ";
 const ACTIONS_GUIDE: &str = "Open Genome tags:
 
 CFG  changes local settings
-ENV  creates or updates a tool environment
+ENV  installs or updates local tools
 CHK  checks installed tools
 REF  prepares reference-genome files
 DATA reads or prepares sequencing data
@@ -78,6 +83,16 @@ pub enum Focus {
     List,
     FloatingWindow(Float<dyn FloatContent>),
     ConfirmationPrompt(Float<ConfirmPrompt>),
+    FilePicker(Float<FilePicker>, SetupPathAction),
+    SetupWizard(Float<SetupWizard>),
+}
+
+#[derive(Clone)]
+pub struct SetupPathAction {
+    title: &'static str,
+    mode: FilePickerMode,
+    script: PathBuf,
+    manifest_key: &'static str,
 }
 
 pub struct ListEntry {
@@ -101,6 +116,89 @@ enum SelectedItem {
 enum ScrollDir {
     Up,
     Down,
+}
+
+fn setup_path_action(command: &Command) -> Option<SetupPathAction> {
+    let Command::LocalFile { file, .. } = command else {
+        return None;
+    };
+
+    if file.ends_with("setup/scripts/set_workdir.sh") {
+        Some(SetupPathAction {
+            title: "Choose Output Folder",
+            mode: FilePickerMode::Directory,
+            script: file.clone(),
+            manifest_key: "paths.workdir",
+        })
+    } else if file.ends_with("setup/scripts/set_reference_path.sh") {
+        Some(SetupPathAction {
+            title: "Choose Reference Genome",
+            mode: FilePickerMode::Either,
+            script: file.clone(),
+            manifest_key: "paths.reference",
+        })
+    } else if file.ends_with("setup/scripts/scan_sequencing_folder.sh") {
+        Some(SetupPathAction {
+            title: "Import Sequencing Files",
+            mode: FilePickerMode::Either,
+            script: file.clone(),
+            manifest_key: "paths.dataset",
+        })
+    } else {
+        None
+    }
+}
+
+fn setup_wizard_script(command: &Command) -> Option<PathBuf> {
+    let Command::LocalFile { file, .. } = command else {
+        return None;
+    };
+
+    file.ends_with("setup/scripts/first_time_setup.sh")
+        .then(|| file.clone())
+}
+
+fn current_manifest_path(script: &Path, key: &str) -> Option<PathBuf> {
+    let manifest_cli = manifest_cli_for_script(script)?;
+    let output = std::process::Command::new("python3")
+        .arg(manifest_cli)
+        .arg("get")
+        .arg(key)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let value = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if value.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(value))
+    }
+}
+
+fn manifest_cli_for_script(script: &Path) -> Option<PathBuf> {
+    let tabs_root = script.parent()?.parent()?.parent()?;
+    Some(tabs_root.join("open-genome/lib/manifest_cli.py"))
+}
+
+fn default_start_path(_mode: FilePickerMode) -> PathBuf {
+    std::env::var_os("HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from("/")))
+}
+
+fn setup_script_command(script: &Path, selected_path: &Path) -> RunningCommand {
+    let shell = format!(
+        "OPEN_GENOME_SELECTED_PATH={} sh {}",
+        shell_quote(&selected_path.to_string_lossy()),
+        shell_quote(&script.to_string_lossy())
+    );
+    RunningCommand::new_shell(shell)
+}
+
+fn shell_quote(value: &str) -> String {
+    format!("'{}'", value.replace('\'', "'\\''"))
 }
 
 impl AppState {
@@ -287,6 +385,8 @@ impl AppState {
 
             Focus::FloatingWindow(ref float) => float.get_shortcut_list(),
             Focus::ConfirmationPrompt(ref prompt) => prompt.get_shortcut_list(),
+            Focus::FilePicker(ref picker, _) => picker.get_shortcut_list(),
+            Focus::SetupWizard(ref wizard) => wizard.get_shortcut_list(),
         }
     }
 
@@ -543,6 +643,8 @@ impl AppState {
         match &mut self.focus {
             Focus::FloatingWindow(float) => float.draw(frame, chunks[1], &self.theme),
             Focus::ConfirmationPrompt(prompt) => prompt.draw(frame, chunks[1], &self.theme),
+            Focus::FilePicker(picker, _) => picker.draw(frame, chunks[1], &self.theme),
+            Focus::SetupWizard(wizard) => wizard.draw(frame, chunks[1], &self.theme),
             _ => {}
         }
 
@@ -601,6 +703,12 @@ impl AppState {
             Focus::ConfirmationPrompt(confirm) => {
                 confirm.content.handle_mouse_event(event);
             }
+            Focus::FilePicker(picker, _) => {
+                picker.handle_mouse_event(event);
+            }
+            Focus::SetupWizard(wizard) => {
+                wizard.handle_mouse_event(event);
+            }
             _ => {}
         }
         true
@@ -640,6 +748,44 @@ impl AppState {
         if let Focus::FloatingWindow(command) = &mut self.focus {
             if command.handle_key_event(key) {
                 self.focus = Focus::List;
+            }
+            return true;
+        }
+
+        if matches!(self.focus, Focus::FilePicker(_, _)) {
+            let mut command_to_run = None;
+            if let Focus::FilePicker(picker, action) = &mut self.focus {
+                if picker.handle_key_event(key) {
+                    command_to_run = picker
+                        .content
+                        .take_selected()
+                        .map(|path| setup_script_command(&action.script, &path));
+                } else {
+                    return true;
+                }
+            }
+            self.focus = Focus::List;
+            if let Some(command) = command_to_run {
+                self.spawn_float(command, FLOAT_SIZE, FLOAT_SIZE);
+            }
+            return true;
+        }
+
+        if matches!(self.focus, Focus::SetupWizard(_)) {
+            let mut command_to_run = None;
+            if let Focus::SetupWizard(wizard) = &mut self.focus {
+                if wizard.handle_key_event(key) {
+                    command_to_run = wizard
+                        .content
+                        .take_command_script()
+                        .map(RunningCommand::new_shell);
+                } else {
+                    return true;
+                }
+            }
+            self.focus = Focus::List;
+            if let Some(command) = command_to_run {
+                self.spawn_float(command, FLOAT_SIZE, FLOAT_SIZE);
             }
             return true;
         }
@@ -919,6 +1065,12 @@ impl AppState {
             SelectedItem::Command => {
                 if self.selected_commands.is_empty() {
                     if let Some(node) = self.get_selected_node() {
+                        if self.spawn_setup_wizard(&node) {
+                            return;
+                        }
+                        if self.spawn_setup_path_picker(&node) {
+                            return;
+                        }
                         self.selected_commands.push(node);
                     }
                 }
@@ -938,6 +1090,38 @@ impl AppState {
         let command = RunningCommand::new(&commands);
         self.spawn_float(command, FLOAT_SIZE, FLOAT_SIZE);
         self.selected_commands.clear();
+    }
+
+    fn spawn_setup_path_picker(&mut self, node: &ListNode) -> bool {
+        let Some(action) = setup_path_action(&node.command) else {
+            return false;
+        };
+        let start = current_manifest_path(&action.script, action.manifest_key)
+            .unwrap_or_else(|| default_start_path(action.mode));
+        let picker = FilePicker::new(action.title, action.mode, start);
+        self.focus =
+            Focus::FilePicker(Float::new(Box::new(picker), FLOAT_SIZE, FLOAT_SIZE), action);
+        true
+    }
+
+    fn spawn_setup_wizard(&mut self, node: &ListNode) -> bool {
+        let Some(script) = setup_wizard_script(&node.command) else {
+            return false;
+        };
+        let Some(script_dir) = script.parent().map(Path::to_path_buf) else {
+            return false;
+        };
+        let default = default_start_path(FilePickerMode::Directory);
+        let starts = SetupWizardStarts {
+            workdir: current_manifest_path(&script, "paths.workdir")
+                .unwrap_or_else(|| default.clone()),
+            dataset: current_manifest_path(&script, "paths.dataset")
+                .unwrap_or_else(|| default.clone()),
+            reference: current_manifest_path(&script, "paths.reference").unwrap_or(default),
+        };
+        let wizard = SetupWizard::new(script_dir, starts);
+        self.focus = Focus::SetupWizard(Float::new(Box::new(wizard), FLOAT_SIZE, FLOAT_SIZE));
+        true
     }
 
     fn spawn_float<T: FloatContent + 'static>(&mut self, float: T, width: u16, height: u16) {

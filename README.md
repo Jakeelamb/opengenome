@@ -45,24 +45,24 @@ Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmat
 
 ## First Run
 
-1. Open `Setup -> Install private Miniforge/Conda` if conda is not already available.
-2. Run `Setup -> Install / update: Open Genome env`.
-3. Run `Setup -> Choose output folder`.
-4. Run `Setup -> Choose sequencing data` or `Setup -> Import sequencing files`.
-5. Run `Setup -> Setup checklist` and follow the unchecked items.
+1. Open `Setup -> Automated setup script` for the native guided path flow.
+2. Choose the output/work folder with the file picker.
+3. Optionally import sequencing files and choose an existing reference genome from the picker.
+4. Run `Setup -> Install / update Open Genome tools` if the checklist shows missing tools.
+5. Review `Setup -> Setup checklist` anytime; it is read-only.
 
 ## Configuration (manifest + conda)
 
 - **User manifest:** `$XDG_CONFIG_HOME/open-genome/manifest.toml` (created on first Setup action from the bundled default).
 - **Privacy:** local-only user data by default. Public tools, references, and pipelines may be downloaded; reads/BAMs/VCFs/logs are not uploaded.
 - **Paths:** `paths.reference`, `paths.dataset`, `paths.workdir`, `paths.threads`.
-- **Conda:** Open Genome can install private Miniforge/Conda under `$XDG_DATA_HOME/open-genome/miniforge`, or use `conda.conda_exe`.
-- **Setup path selection:** Setup actions let users choose files/folders with `fzf` when available, or paste a path directly. Selecting a sequencing file imports its containing folder so paired reads and related files are found together.
-- **Setup checklist:** `Setup -> Setup checklist` shows completed and missing setup items, with the next action to run for each missing requirement.
-- **Samples:** Setup can scan paired FASTQ/FASTQ.gz, existing BAM/CRAM, existing VCF, or user-provided assembly files, including mixed folders. It writes row-id based native Open Genome samplesheets plus a Sarek-compatible sheet for the advanced external workflow.
-- **Reference/workflow:** Assembly actions fetch the public GATK GRCh38 bundle, index it locally, prepare the native Open Genome Nextflow pipeline, and run/resume it through the single `opengenome` conda environment. Sarek remains available as an advanced external workflow.
+- **Conda:** Open Genome can reuse an existing `conda`/`mamba` executable or install private Miniforge/Conda under `$XDG_DATA_HOME/open-genome/miniforge`.
+- **Setup path selection:** The TUI uses a native file picker for setup paths, including the automated setup path flow. Direct shell use still falls back to `fzf` when available, or Bash/readline filesystem completion. Quoted or shell-escaped pasted paths are normalized. Selecting a sequencing file imports its containing folder so paired reads and related files are found together.
+- **Setup checklist:** `Setup -> Setup checklist` is read-only. It shows completed and missing setup items, with the next action to run for each missing requirement.
+- **Samples:** Setup can scan paired FASTQ/FASTQ.gz, existing BAM/CRAM, existing VCF, or user-provided assembly files, including mixed folders. It writes row-id based native Open Genome samplesheets.
+- **Reference/workflow:** Genome Workflow actions fetch the public GATK GRCh38 bundle, index it locally, prepare the native Open Genome Nextflow pipeline, and run/resume it through the `opengenome` conda environment.
 - **Reports:** The native workflow stages exact process outputs into the report compiler, then emits per-row HTML/TSV/JSON evidence with explicit limitations and PGx/annotation status. The base env includes lightweight `gfastats`; heavier report tools such as QUAST, VEP, and full PharmCAT installation are treated as optional/on-demand.
-- **Environment:** the main `opengenome` conda spec lives at [core/tabs/open-genome/modules/opengenome/environment.yml](core/tabs/open-genome/modules/opengenome/environment.yml). It is the source of truth for fresh core installs. IGV is kept in the separate `og-genome-browser` module because current GATK packages require Java 17 while current IGV requires Java 21. Legacy per-tool module specs remain under [core/tabs/open-genome/modules/](core/tabs/open-genome/modules/) for fallback/debugging.
+- **Environment:** `Setup -> Install / update Open Genome tools` is the single user-facing install action. It installs the main `opengenome` environment plus a small IGV environment because current GATK packages require Java 17 while current IGV requires Java 21.
 
 ## Safety Boundaries
 

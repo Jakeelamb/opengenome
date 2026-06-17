@@ -7,6 +7,10 @@ cd "$repo"
 echo "== Python unit tests =="
 python3 core/tabs/open-genome/lib/sample_scan_test.py
 python3 core/tabs/open-genome/lib/report_compiler_test.py
+python3 core/tabs/open-genome/lib/setup_status_test.py
+
+echo "== Shell helper tests =="
+bash core/tabs/setup/scripts/open_genome_lib_test.sh
 
 echo "== Shell syntax =="
 while IFS= read -r script; do

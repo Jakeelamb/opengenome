@@ -63,12 +63,16 @@ open_genome_cache_dir() {
 open_genome_workdir() {
 	open_genome_bootstrap_manifest || return 1
 	workdir=$(open_genome_paths_get workdir)
-	if test -z "$workdir"; then
-		workdir="$(open_genome_data_dir)/work"
+	if test -z "$workdir" || open_genome_is_temp_script_path "$workdir"; then
+		workdir=$(open_genome_default_workdir)
 		open_genome_paths_set workdir "$workdir" || return 1
 	fi
 	mkdir -p "$workdir"
 	printf '%s\n' "$workdir"
+}
+
+open_genome_default_workdir() {
+	printf '%s\n' "$(open_genome_data_dir)/work"
 }
 
 open_genome_resolve_conda() {
@@ -87,11 +91,11 @@ open_genome_conda_run() {
 open_genome_expand_path() {
 	path=$1
 	case "$path" in
-		~)
+		'~')
 			printf '%s\n' "$HOME"
 			;;
-		~/*)
-			printf '%s/%s\n' "$HOME" "${path#~/}"
+		'~'/*)
+			printf '%s/%s\n' "$HOME" "${path#\~/}"
 			;;
 		*)
 			printf '%s\n' "$path"
@@ -101,10 +105,28 @@ open_genome_expand_path() {
 
 open_genome_clean_path() {
 	path=$1
-	path=${path#\"}
-	path=${path%\"}
-	path=${path#\'}
-	path=${path%\'}
+	if command -v python3 >/dev/null 2>&1; then
+		path=$(OPEN_GENOME_RAW_PATH=$path python3 -c '
+import os
+import shlex
+
+raw = os.environ.get("OPEN_GENOME_RAW_PATH", "").strip()
+try:
+    parts = shlex.split(raw)
+except ValueError:
+    parts = []
+if len(parts) == 1:
+    raw = parts[0]
+else:
+    raw = raw.strip("\"'\''")
+print(raw)
+')
+	else
+		path=${path#\"}
+		path=${path%\"}
+		path=${path#\'}
+		path=${path%\'}
+	fi
 	open_genome_expand_path "$path"
 }
 
@@ -119,6 +141,33 @@ open_genome_abs_path() {
 		base=$(basename -- "$path")
 		printf '%s/%s\n' "$(CDPATH= cd -- "$dir" 2>/dev/null && pwd)" "$base"
 	fi
+}
+
+open_genome_is_temp_script_path() {
+	case "$1" in
+		/tmp/open_genome_scripts*) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+open_genome_is_yes_no_answer() {
+	case "$1" in
+		y | Y | yes | YES | n | N | no | NO) return 0 ;;
+		*) return 1 ;;
+	esac
+}
+
+open_genome_nearest_existing_parent() {
+	path=$1
+	parent=$(dirname -- "$path")
+	while ! test -d "$parent"; do
+		next=$(dirname -- "$parent")
+		if test "$next" = "$parent"; then
+			return 1
+		fi
+		parent=$next
+	done
+	printf '%s\n' "$parent"
 }
 
 open_genome_path_roots() {
@@ -164,6 +213,30 @@ open_genome_candidate_paths() {
 	done | awk '!seen[$0]++' | sort
 }
 
+open_genome_read_path() {
+	current=${1:-}
+	if test -t 0 && test -t 1 && command -v bash >/dev/null 2>&1; then
+		OPEN_GENOME_READ_DEFAULT=$current bash -c '
+default=${OPEN_GENOME_READ_DEFAULT:-}
+bind "set completion-ignore-case on" 2>/dev/null || true
+bind "set show-all-if-ambiguous on" 2>/dev/null || true
+bind "set mark-directories on" 2>/dev/null || true
+if test -n "$default"; then
+	IFS= read -e -r -i "$default" -p "> " choice || true
+else
+	IFS= read -e -r -p "> " choice || true
+fi
+printf "%s\n" "$choice"
+'
+	else
+		if test -t 0 && test -t 1; then
+			printf '> ' >&2
+		fi
+		read -r choice || true
+		printf '%s\n' "$choice"
+	fi
+}
+
 open_genome_choose_path() {
 	label=$1
 	kind=$2
@@ -172,6 +245,12 @@ open_genome_choose_path() {
 	echo "$label" >&2
 	if test -n "$current"; then
 		echo "Current: $current" >&2
+	fi
+
+	if test -n "${OPEN_GENOME_SELECTED_PATH:-}"; then
+		choice=$(open_genome_clean_path "$OPEN_GENOME_SELECTED_PATH")
+		open_genome_abs_path "$choice"
+		return 0
 	fi
 
 	choice=
@@ -186,12 +265,14 @@ open_genome_choose_path() {
 
 	if test -z "$choice"; then
 		if test -n "$current"; then
-			echo "Paste a path, or press Enter to keep the current value." >&2
+			echo "Enter a path, or press Enter to keep the current value." >&2
 		else
-			echo "Paste a path to a file or folder." >&2
+			echo "Enter a path to a file or folder." >&2
 		fi
-		printf '> ' >&2
-		read -r choice || true
+		if test -t 0 && test -t 1 && command -v bash >/dev/null 2>&1; then
+			echo "Tab completes filesystem paths from the cursor." >&2
+		fi
+		choice=$(open_genome_read_path "$current")
 	fi
 
 	if test -z "$choice" && test -n "$current"; then

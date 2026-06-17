@@ -194,6 +194,10 @@ impl FloatContent for RunningCommand {
 pub static TERMINAL_UPDATED: AtomicBool = AtomicBool::new(true);
 
 impl RunningCommand {
+    pub fn new_shell(script: String) -> Self {
+        Self::new(&[&Command::Raw(script)])
+    }
+
     pub fn new(commands: &[&Command]) -> Self {
         let pty_system = NativePtySystem::default();
 
