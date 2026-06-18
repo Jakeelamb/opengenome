@@ -14,7 +14,7 @@ use crate::{
     theme::Theme,
     Args,
 };
-use linutil_core::{ego_tree::NodeId, Command, Config, ConfigValues, ListNode, TabList};
+use opengenome_core::{ego_tree::NodeId, Command, Config, ConfigValues, ListNode, TabList};
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseEvent, MouseEventKind},
     layout::Flex,
@@ -208,7 +208,7 @@ impl AppState {
         #[cfg(not(unix))]
         let root_warning = None;
 
-        let tabs = linutil_core::get_tabs(!args.override_validation);
+        let tabs = opengenome_core::get_tabs(!args.override_validation);
         let root_id = tabs[0].tree.root().id();
 
         let longest_tab_display_len = tabs

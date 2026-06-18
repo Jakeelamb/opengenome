@@ -1,11 +1,11 @@
 [package]
-name = "linutil_tui"
+name = "opengenome_tui"
 description = "Open Genome terminal utility for setting up and running genomics workflows."
-documentation = "https://github.com/Jakeelamb/genome_os"
+documentation = "https://github.com/Jakeelamb/opengenome"
 readme = "../README.md"
 edition = "2021"
 license.workspace = true
-repository = "https://github.com/Jakeelamb/genome_os/tree/main/tui"
+repository = "https://github.com/Jakeelamb/opengenome/tree/main/tui"
 version.workspace = true
 include = [
     "src/*.rs",
@@ -16,7 +16,7 @@ include = [
 ]
 
 [[bin]]
-name = "linutil"
+name = "opengenome"
 path = "src/main.rs"
 
 [features]
@@ -26,7 +26,7 @@ tips = []
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
 image = { version = "0.25.10", default-features = false, features = ["ico", "png"] }
-linutil_core = { version = "26.5.21", path = "../core" }
+opengenome_core = { version = "26.5.21", path = "../core" }
 nix = { version = "0.31.3", features = ["user"] }
 oneshot = { version = "0.2.1", features = ["std"], default-features = false }
 portable-pty = "0.9.0"

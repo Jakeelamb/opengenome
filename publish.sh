@@ -34,14 +34,14 @@ core_version = core_pkg.get("version") or workspace_version
 if isinstance(core_version, dict) and core_version.get("workspace"):
 	core_version = workspace_version
 
-linutil_core_dep = tui.get("dependencies", {}).get("linutil_core")
-linutil_core_dep_version = None
-if isinstance(linutil_core_dep, dict):
-		linutil_core_dep_version = linutil_core_dep.get("version")
+opengenome_core_dep = tui.get("dependencies", {}).get("opengenome_core")
+opengenome_core_dep_version = None
+if isinstance(opengenome_core_dep, dict):
+		opengenome_core_dep_version = opengenome_core_dep.get("version")
 
 print(workspace_version or "")
 print(core_version or "")
-print(linutil_core_dep_version or "")
+print(opengenome_core_dep_version or "")
 PY
 )
 
@@ -73,7 +73,7 @@ if [[ "$workspace_version" != "$expected_version" ]]; then
 fi
 
 if [[ "$core_version" != "$expected_version" ]]; then
-	echo "linutil_core package version $core_version does not match today's expected $expected_version."
+	echo "opengenome_core package version $core_version does not match today's expected $expected_version."
 	# Core uses workspace version, so if workspace was updated, this should be fine
 	if [[ "$workspace_version" == "$core_version" ]]; then
 		echo "Core version will be updated via workspace version."
@@ -81,7 +81,7 @@ if [[ "$core_version" != "$expected_version" ]]; then
 fi
 
 if [[ "$tui_dep_version" != "$expected_version" ]]; then
-	echo "linutil_tui depends on linutil_core $tui_dep_version but expected $expected_version."
+	echo "opengenome_tui depends on opengenome_core $tui_dep_version but expected $expected_version."
 	update_toml_version "tui/Cargo.toml" "$tui_dep_version" "$expected_version"
 	version_updated=true
 fi
@@ -106,15 +106,15 @@ if ! cargo fmt --check; then
 fi
 
 bash sort-tomlfiles.sh
-cargo test --no-fail-fast --package linutil_core
+cargo test --no-fail-fast --package opengenome_core
 cargo build --release
 echo "Checks passed."
 
 read -r -p "Publish to crates.io? [y/N]: " answer
 case "$answer" in
 	[Yy]*)
-		cargo publish -p linutil_core
-		cargo publish -p linutil_tui
+		cargo publish -p opengenome_core
+		cargo publish -p opengenome_tui
 		;;
 	*)
 		echo "Publish skipped."

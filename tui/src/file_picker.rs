@@ -1,6 +1,6 @@
 use crate::{float::FloatContent, hint::Shortcut, shortcuts, theme::Theme};
 use ratatui::{
-    crossterm::event::{KeyCode, KeyEvent, MouseEvent},
+    crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEvent},
     prelude::*,
     symbols::border,
     widgets::{Block, Clear, List, ListItem, ListState, Padding, Paragraph, Wrap},
@@ -33,6 +33,7 @@ pub struct FilePicker {
 #[derive(Clone)]
 enum PickerEntry {
     Skip,
+    CreateDirectory { path: PathBuf, name: String },
     ChooseCurrent,
     Parent,
     File(FileEntry),
@@ -80,7 +81,7 @@ impl FilePicker {
     }
 
     fn refresh(&mut self) {
-        self.entries = read_entries(&self.cwd, &self.filter, self.allow_skip);
+        self.entries = read_entries(&self.cwd, &self.filter, self.allow_skip, self.mode);
         let selected = if self.entries.is_empty() {
             None
         } else {
@@ -107,6 +108,16 @@ impl FilePicker {
         {
             Some(PickerEntry::Skip) => {
                 self.skipped = true;
+                return;
+            }
+            Some(PickerEntry::CreateDirectory { path, .. }) => {
+                let path = path.clone();
+                match fs::create_dir_all(&path) {
+                    Ok(()) => self.selected = Some(path),
+                    Err(err) => {
+                        self.message = format!("Could not create folder: {err}");
+                    }
+                }
                 return;
             }
             Some(PickerEntry::ChooseCurrent) => {
@@ -235,6 +246,11 @@ impl FloatContent for FilePicker {
                     "Skip this step".to_string(),
                     Style::default().fg(theme.tab_color()).bold(),
                 ),
+                PickerEntry::CreateDirectory { path, name } => (
+                    "[N]",
+                    format!("Create folder \"{name}\" ({})", path.display()),
+                    Style::default().fg(theme.success_color()).bold(),
+                ),
                 PickerEntry::ChooseCurrent => (
                     "[+]",
                     format!("Choose this folder ({})", self.cwd.display()),
@@ -275,16 +291,16 @@ impl FloatContent for FilePicker {
 
         let default_footer = match self.mode {
             FilePickerMode::Directory if self.allow_skip => {
-                "Enter skips when [S] is highlighted or opens highlighted folders. Space or [+] chooses the current folder. Backspace edits filter, then goes up."
+                "Type to filter or name a new folder. Arrow keys move. Enter activates the highlighted row. Backspace edits filter, then goes up when empty."
             }
             FilePickerMode::Directory => {
-                "Enter opens highlighted folders. Space or [+] chooses the current folder. Backspace edits filter, then goes up."
+                "Type to filter or name a new folder. Arrow keys move. Enter activates the highlighted row. Backspace edits filter, then goes up when empty."
             }
             FilePickerMode::Either if self.allow_skip => {
-                "Enter skips when [S] is highlighted, opens folders, or selects files. Space selects the current folder. Backspace edits filter, then goes up."
+                "Type to filter. Arrow keys move. Enter activates the highlighted row. Backspace edits filter, then goes up when empty."
             }
             FilePickerMode::Either => {
-                "Enter opens folders or selects files. Space selects the current folder. Backspace edits filter, then goes up."
+                "Type to filter. Arrow keys move. Enter activates the highlighted row. Backspace edits filter, then goes up when empty."
             }
         };
         let footer = if self.message.is_empty() {
@@ -303,7 +319,7 @@ impl FloatContent for FilePicker {
     fn handle_key_event(&mut self, key: &KeyEvent) -> bool {
         self.message.clear();
         match key.code {
-            KeyCode::Esc | KeyCode::Char('q') => {
+            KeyCode::Esc => {
                 self.cancelled = true;
                 true
             }
@@ -311,13 +327,9 @@ impl FloatContent for FilePicker {
                 self.select_current();
                 self.selected.is_some() || self.skipped
             }
-            KeyCode::Right | KeyCode::Char('l') => {
+            KeyCode::Right => {
                 self.open_current();
                 false
-            }
-            KeyCode::Char(' ') => {
-                self.choose_current_folder();
-                true
             }
             KeyCode::Backspace => {
                 if self.filter.is_empty() {
@@ -328,24 +340,28 @@ impl FloatContent for FilePicker {
                 }
                 false
             }
-            KeyCode::Left | KeyCode::Char('h') => {
+            KeyCode::Left => {
                 self.parent();
                 false
             }
-            KeyCode::Char('~') => {
+            KeyCode::Home => {
                 self.home();
                 false
             }
-            KeyCode::Down | KeyCode::Char('j') => {
+            KeyCode::Down => {
                 self.scroll_down();
                 false
             }
-            KeyCode::Up | KeyCode::Char('k') => {
+            KeyCode::Up => {
                 self.scroll_up();
                 false
             }
             KeyCode::Char(ch) => {
-                if !ch.is_control() {
+                if !ch.is_control()
+                    && !key
+                        .modifiers
+                        .intersects(KeyModifiers::CONTROL | KeyModifiers::ALT)
+                {
                     self.filter.push(ch);
                     self.refresh();
                 }
@@ -373,12 +389,11 @@ impl FloatContent for FilePicker {
             "File picker",
             shortcuts!(
                 ("Choose highlighted", ["Enter"]),
-                ("Open folder", ["Right", "l"]),
-                ("Choose current folder", ["Space"]),
+                ("Open folder", ["Right"]),
                 ("Skip optional step", ["S row"]),
                 ("Parent", ["Backspace", "Left"]),
-                ("Home", ["~"]),
-                ("Cancel", ["Esc", "q"]),
+                ("Home", ["Home"]),
+                ("Cancel", ["Esc"]),
             ),
         )
     }
@@ -396,14 +411,20 @@ fn start_dir(path: &Path) -> PathBuf {
     }
 }
 
-fn read_entries(cwd: &Path, filter: &str, allow_skip: bool) -> Vec<PickerEntry> {
+fn read_entries(
+    cwd: &Path,
+    filter: &str,
+    allow_skip: bool,
+    mode: FilePickerMode,
+) -> Vec<PickerEntry> {
+    let create_directory = new_directory_entry(cwd, filter, mode);
     let filter = filter.to_lowercase();
     let Ok(read_dir) = fs::read_dir(cwd) else {
-        return if allow_skip {
-            vec![PickerEntry::Skip]
-        } else {
-            Vec::new()
-        };
+        return allow_skip
+            .then_some(PickerEntry::Skip)
+            .into_iter()
+            .chain(create_directory)
+            .collect();
     };
 
     let mut entries: Vec<_> = read_dir
@@ -412,6 +433,9 @@ fn read_entries(cwd: &Path, filter: &str, allow_skip: bool) -> Vec<PickerEntry> 
             let path = entry.path();
             let file_type = entry.file_type().ok()?;
             let is_dir = file_type.is_dir();
+            if matches!(mode, FilePickerMode::Directory) && !is_dir {
+                return None;
+            }
             let name = entry.file_name().to_string_lossy().to_string();
             if name.starts_with('.') && filter.is_empty() {
                 return None;
@@ -430,10 +454,35 @@ fn read_entries(cwd: &Path, filter: &str, allow_skip: bool) -> Vec<PickerEntry> 
     });
 
     let skip = allow_skip.then_some(PickerEntry::Skip).into_iter();
-    skip.chain(std::iter::once(PickerEntry::ChooseCurrent))
+    skip.chain(create_directory)
+        .chain(std::iter::once(PickerEntry::ChooseCurrent))
         .chain(std::iter::once(PickerEntry::Parent))
         .chain(entries.into_iter().map(PickerEntry::File))
         .collect()
+}
+
+fn new_directory_entry(cwd: &Path, filter: &str, mode: FilePickerMode) -> Option<PickerEntry> {
+    if !matches!(mode, FilePickerMode::Directory) {
+        return None;
+    }
+    let name = filter.trim();
+    if name.is_empty()
+        || name == "."
+        || name == ".."
+        || name.contains('/')
+        || name.contains('\\')
+        || name.contains('\0')
+    {
+        return None;
+    }
+    let path = cwd.join(name);
+    if path.exists() {
+        return None;
+    }
+    Some(PickerEntry::CreateDirectory {
+        path,
+        name: name.to_string(),
+    })
 }
 
 #[cfg(test)]
@@ -455,7 +504,7 @@ mod tests {
         std::fs::create_dir_all(root.join("alpha")).unwrap();
         std::fs::create_dir_all(root.join("beta")).unwrap();
 
-        let entries = read_entries(&root, "alp", false);
+        let entries = read_entries(&root, "alp", false, FilePickerMode::Directory);
         assert!(entries.iter().any(|entry| matches!(
             entry,
             PickerEntry::File(file) if file.name == "alpha"
@@ -464,6 +513,94 @@ mod tests {
             entry,
             PickerEntry::File(file) if file.name == "beta"
         )));
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn directory_mode_hides_files() {
+        let root = unique_test_dir("directory-hides-files");
+        std::fs::create_dir_all(root.join("folder")).unwrap();
+        std::fs::write(root.join("reads.fastq.gz"), b"test").unwrap();
+
+        let entries = read_entries(&root, "", false, FilePickerMode::Directory);
+
+        assert!(entries.iter().any(|entry| matches!(
+            entry,
+            PickerEntry::File(file) if file.name == "folder" && file.is_dir
+        )));
+        assert!(!entries.iter().any(|entry| matches!(
+            entry,
+            PickerEntry::File(file) if file.name == "reads.fastq.gz"
+        )));
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn either_mode_keeps_files_visible() {
+        let root = unique_test_dir("either-keeps-files");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("reads.fastq.gz"), b"test").unwrap();
+
+        let entries = read_entries(&root, "", false, FilePickerMode::Either);
+
+        assert!(entries.iter().any(|entry| matches!(
+            entry,
+            PickerEntry::File(file) if file.name == "reads.fastq.gz" && !file.is_dir
+        )));
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn directory_mode_shows_create_folder_for_new_filter() {
+        let root = unique_test_dir("create-row");
+        std::fs::create_dir_all(&root).unwrap();
+
+        let entries = read_entries(&root, "new-work", false, FilePickerMode::Directory);
+
+        assert!(matches!(
+            entries.first(),
+            Some(PickerEntry::CreateDirectory { name, path })
+                if name == "new-work" && path == &root.join("new-work")
+        ));
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn directory_mode_enter_creates_and_selects_new_folder() {
+        let root = unique_test_dir("create-select");
+        let created = root.join("new-work");
+        std::fs::create_dir_all(&root).unwrap();
+        let mut picker = FilePicker::new(
+            "Choose Output Folder",
+            FilePickerMode::Directory,
+            root.clone(),
+        );
+        picker.filter = "new-work".to_string();
+        picker.refresh();
+
+        let finished = picker.handle_key_event(&KeyEvent::from(KeyCode::Enter));
+
+        assert!(finished);
+        assert_eq!(picker.take_selected(), Some(created.clone()));
+        assert!(created.is_dir());
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn either_mode_does_not_offer_create_folder() {
+        let root = unique_test_dir("no-create-either");
+        std::fs::create_dir_all(&root).unwrap();
+
+        let entries = read_entries(&root, "new-work", false, FilePickerMode::Either);
+
+        assert!(!entries
+            .iter()
+            .any(|entry| matches!(entry, PickerEntry::CreateDirectory { .. })));
 
         std::fs::remove_dir_all(root).unwrap();
     }
@@ -573,6 +710,28 @@ mod tests {
         picker.handle_key_event(&KeyEvent::from(KeyCode::Backspace));
 
         assert_eq!(picker.filter, "ab");
+        assert_eq!(picker.cwd, root);
+
+        std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn printable_shortcut_letters_are_typed_into_filter() {
+        let root = unique_test_dir("shortcut-letters");
+        std::fs::create_dir_all(&root).unwrap();
+        let mut picker = FilePicker::new(
+            "Choose Output Folder",
+            FilePickerMode::Directory,
+            root.clone(),
+        );
+
+        for ch in ['h', 'j', 'k', 'l', 'q', ' '] {
+            let finished = picker.handle_key_event(&KeyEvent::from(KeyCode::Char(ch)));
+            assert!(!finished);
+        }
+
+        assert_eq!(picker.filter, "hjklq ");
+        assert!(!picker.cancelled);
         assert_eq!(picker.cwd, root);
 
         std::fs::remove_dir_all(root).unwrap();

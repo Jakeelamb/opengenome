@@ -1,5 +1,5 @@
 use crate::{float::FloatContent, hint::Shortcut, shortcuts, theme::Theme};
-use linutil_core::Command;
+use opengenome_core::Command;
 use ratatui::{
     crossterm::event::{KeyCode, KeyEvent, MouseEvent, MouseEventKind},
     prelude::*,

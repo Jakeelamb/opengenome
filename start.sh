@@ -27,7 +27,7 @@ if [ -f "$SCRIPT_DIR/Cargo.toml" ] && command -v cargo >/dev/null 2>&1; then
     cd "$SCRIPT_DIR"
     check $? "Entering Open Genome directory"
 
-    CARGO_TARGET_DIR="$TARGET_DIR" cargo run -p linutil_tui --bin linutil -- "$@"
+    CARGO_TARGET_DIR="$TARGET_DIR" cargo run -p opengenome_tui --bin opengenome -- "$@"
     check $? "Running Open Genome from source"
     exit 0
 fi
@@ -42,8 +42,8 @@ findArch() {
 
 getUrl() {
     case "${arch}" in
-        x86_64) echo "https://github.com/Jakeelamb/genome_os/releases/latest/download/linutil";;
-        *) echo "https://github.com/Jakeelamb/genome_os/releases/latest/download/linutil-${arch}";;
+        x86_64) echo "https://github.com/Jakeelamb/opengenome/releases/latest/download/opengenome";;
+        *) echo "https://github.com/Jakeelamb/opengenome/releases/latest/download/opengenome-${arch}";;
     esac
 }
 
@@ -55,7 +55,7 @@ curl -fsL "$(getUrl)" -o "$temp_file"
 check $? "Downloading Open Genome"
 
 chmod +x "$temp_file"
-check $? "Making linutil executable"
+check $? "Making Open Genome executable"
 
 "$temp_file" "$@"
 check $? "Executing Open Genome"

@@ -989,38 +989,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "linutil_core"
-version = "26.5.21"
-dependencies = [
- "ego-tree",
- "include_dir",
- "serde",
- "temp-dir",
- "toml",
- "which",
-]
-
-[[package]]
-name = "linutil_tui"
-version = "26.5.21"
-dependencies = [
- "clap",
- "image",
- "linutil_core",
- "nix 0.31.3",
- "oneshot",
- "portable-pty",
- "ratatui 0.30.0",
- "ratatui-image",
- "time",
- "tree-sitter-bash",
- "tree-sitter-highlight",
- "tui-term",
- "unicode-width 0.2.0",
- "vt100-ctt",
-]
-
-[[package]]
 name = "linux-raw-sys"
 version = "0.4.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1256,6 +1224,38 @@ name = "oneshot"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfe21416a02c693fb9f980befcb230ecc70b0b3d1cc4abf88b9675c4c1457f0c"
+
+[[package]]
+name = "opengenome_core"
+version = "26.5.21"
+dependencies = [
+ "ego-tree",
+ "include_dir",
+ "serde",
+ "temp-dir",
+ "toml",
+ "which",
+]
+
+[[package]]
+name = "opengenome_tui"
+version = "26.5.21"
+dependencies = [
+ "clap",
+ "image",
+ "nix 0.31.3",
+ "oneshot",
+ "opengenome_core",
+ "portable-pty",
+ "ratatui 0.30.0",
+ "ratatui-image",
+ "time",
+ "tree-sitter-bash",
+ "tree-sitter-highlight",
+ "tui-term",
+ "unicode-width 0.2.0",
+ "vt100-ctt",
+]
 
 [[package]]
 name = "ordered-float"
@@ -2659,7 +2659,7 @@ dependencies = [
 name = "xtask"
 version = "26.5.21"
 dependencies = [
- "linutil_core",
+ "opengenome_core",
 ]
 
 [[package]]
