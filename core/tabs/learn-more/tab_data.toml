@@ -1,0 +1,22 @@
+name = "Learn More"
+
+[[data]]
+name = "Human reference sources"
+description = "Where to get current GRCh38, T2T-CHM13, annotations, and workflow-compatible reference bundles."
+script = "scripts/human_reference_sources.sh"
+task_list = "INFO"
+multi_select = false
+
+[[data]]
+name = "Tools, source code, and papers"
+description = "Links to the workflow tools, GitHub/source pages, documentation, and primary papers where available."
+script = "scripts/tool_sources_and_papers.sh"
+task_list = "INFO"
+multi_select = false
+
+[[data]]
+name = "Conda and package projects"
+description = "Links to Conda, Miniforge, conda-forge, Bioconda, and package references used by Open Genome."
+script = "scripts/conda_and_packages.sh"
+task_list = "INFO"
+multi_select = false

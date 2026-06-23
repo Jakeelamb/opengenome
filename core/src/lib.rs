@@ -53,7 +53,7 @@ mod tests {
     use temp_dir::TempDir;
 
     pub(crate) fn create_temp_dir() -> TempDir {
-        TempDir::with_prefix("linutil_test").unwrap()
+        TempDir::with_prefix("opengenome_test").unwrap()
     }
 
     pub(crate) fn create_tab() -> Tab {

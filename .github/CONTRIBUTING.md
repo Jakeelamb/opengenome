@@ -5,9 +5,9 @@ Open Genome is a local-first terminal app for personal genomics workflows. Contr
 ## Development Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME_HERE/genome_os.git
-cd genome_os
-cargo run -p linutil_tui
+git clone https://github.com/YOUR_USERNAME_HERE/opengenome.git
+cd opengenome
+cargo run -p opengenome_tui --bin opengenome
 ```
 
 Setup scripts require Python 3.11+ for `tomllib`. Full workflow testing may also use conda, Java, Nextflow, and the bundled `opengenome` conda environment.
@@ -18,7 +18,7 @@ Run:
 
 ```bash
 cargo fmt --check
-cargo check -p linutil_tui --all-features
+cargo check -p opengenome_tui --all-features
 cargo test
 scripts/check-genomics.sh
 git diff --check

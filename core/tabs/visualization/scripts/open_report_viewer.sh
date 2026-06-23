@@ -41,7 +41,7 @@ fi
 
 if test -z "$report" || ! test -f "$report"; then
 	echo "No Open Genome report found."
-	echo "Run Analysis -> Run local genome analysis first, or use Start Here -> Load existing results."
+	echo "Run Analysis -> Run reference-based analysis, Run existing VCF report, or Run de novo assembly first; or use Start Here -> Load existing results."
 	exit 1
 fi
 

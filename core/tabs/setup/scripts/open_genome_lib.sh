@@ -85,7 +85,12 @@ open_genome_conda_run() {
 	env_name=$1
 	shift
 	open_genome_resolve_conda || return 1
-	"$OG_CONDA_EXE" run -n "$env_name" "$@"
+	env_prefix=$("$OG_CONDA_EXE" env list 2>/dev/null | awk -v name="$env_name" '$1 == name { print $NF; exit }')
+	if test -z "$env_prefix" || ! test -d "$env_prefix/bin"; then
+		echo "Conda environment not found: $env_name" >&2
+		return 1
+	fi
+	PATH="$env_prefix/bin:$(dirname "$OG_CONDA_EXE"):$PATH" "$@"
 }
 
 open_genome_expand_path() {

@@ -32,4 +32,12 @@ pub struct Args {
     /// Bypass root user check
     #[arg(short = 'r', long)]
     pub bypass_root: bool,
+
+    /// Generate bundled demo outputs and print the results summary without launching the TUI
+    #[arg(long)]
+    pub demo_output: bool,
+
+    /// Run public human validation data through the pipelines and print the results summary without launching the TUI
+    #[arg(long)]
+    pub human_validation_output: bool,
 }

@@ -7,6 +7,7 @@ resolver = "2"
 license = "MIT"
 version = "26.5.21"
 edition = "2021"
+authors = ["Open Genome contributors"]
 
 [profile.release]
 opt-level = "z"

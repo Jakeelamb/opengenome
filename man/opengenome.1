@@ -1,0 +1,73 @@
+.\" manpage for Open Genome
+.TH "opengenome" "1" "June 2026" "Open Genome" "Open Genome Manual"
+
+.SH NAME
+opengenome \- local-first terminal workflows for genome data
+
+.SH SYNOPSIS
+\fBopengenome [OPTIONS]\fR
+
+.SH DESCRIPTION
+Open Genome is a keyboard-first terminal application for setting up local genomics tooling, selecting sequencing data, preparing workflow runs, launching Nextflow pipelines, and reviewing local reports.
+.br
+Open Genome keeps reads, alignments, variants, assemblies, logs, and reports on the user's machine by default.
+
+.SH OPTIONS
+.TP
+\fB\-c\fR, \fB\-\-config\fR \fI<path>\fR
+Path to the configuration file.
+
+.TP
+\fB\-t\fR, \fB\-\-theme\fR \fI<theme>\fR
+Set the theme to use in the TUI.
+.br
+Possible values:
+\fIdefault\fR,
+\fIcompatible\fR.
+.br
+Defaults to \fIdefault\fR.
+
+.TP
+\fB\-y\fR, \fB\-\-skip\-confirmation\fR
+Skip confirmation prompt before executing commands.
+
+.TP
+\fB\-\-override\-validation\fR
+Show all available options, disregarding compatibility checks.
+
+.TP
+\fB\-s\fR, \fB\-\-size\-bypass\fR
+Bypass the terminal size limit.
+
+.TP
+\fB\-m\fR, \fB\-\-mouse\fR
+Enable mouse interaction.
+
+.TP
+\fB\-r\fR, \fB\-\-bypass\-root\fR
+Bypass root user check.
+
+.TP
+\fB\-\-demo\-output\fR
+Generate the bundled local demo output bundle without launching the TUI.
+
+.TP
+\fB\-\-human\-validation\-output\fR
+Run the public human validation output workflow without launching the TUI.
+
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help.
+
+.SH DOCUMENTATION
+Project documentation and source:
+.br
+https://github.com/Jakeelamb/opengenome
+
+.SH REPORTING BUGS
+Report reproducible issues at:
+.br
+https://github.com/Jakeelamb/opengenome/issues
+
+.SH COPYRIGHT
+MIT License.

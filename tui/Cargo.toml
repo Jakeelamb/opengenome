@@ -5,14 +5,14 @@ documentation = "https://github.com/Jakeelamb/opengenome"
 readme = "../README.md"
 edition = "2021"
 license.workspace = true
+authors.workspace = true
 repository = "https://github.com/Jakeelamb/opengenome/tree/main/tui"
 version.workspace = true
 include = [
     "src/*.rs",
     "Cargo.toml",
     "cool_tips.txt",
-    "assets/ctt_logo.png",
-    "../man/linutil.1",
+    "assets/open_genome_logo.png",
 ]
 
 [[bin]]
@@ -25,7 +25,7 @@ tips = []
 
 [dependencies]
 clap = { version = "4.6.1", features = ["derive"] }
-image = { version = "0.25.10", default-features = false, features = ["ico", "png"] }
+image = { version = "0.25.10", default-features = false, features = ["png"] }
 opengenome_core = { version = "26.5.21", path = "../core" }
 nix = { version = "0.31.3", features = ["user"] }
 oneshot = { version = "0.2.1", features = ["std"], default-features = false }
@@ -35,6 +35,5 @@ ratatui-image = { version = "11.0.2", default-features = false, features = ["cro
 time = { version = "0.3.47", features = ["formatting", "local-offset", "macros"], default-features = false }
 tree-sitter-bash = "0.25.1"
 tree-sitter-highlight = "0.26.8"
-tui-term = { version = "0.3.4", default-features = false }
+tui-term = { version = "0.3.4", default-features = false, features = ["vt100"] }
 unicode-width = { version = "0.2.0", default-features = false }
-vt100-ctt = "0.17.1"

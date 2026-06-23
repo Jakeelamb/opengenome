@@ -1,0 +1,2 @@
+preset: existing_vcf_report
+workflow: vcf-annotate

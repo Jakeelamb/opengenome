@@ -5,6 +5,7 @@ repository = "https://github.com/Jakeelamb/opengenome/tree/main/core"
 edition = "2021"
 version.workspace = true
 license.workspace = true
+authors.workspace = true
 include = ["src/*.rs", "Cargo.toml", "tabs/**"]
 
 [dependencies]

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opengenome.local/schemas/denovo-assembly-samplesheet.json",
+  "title": "OpenGenome de novo assembly samplesheet",
+  "description": "Rows accepted by the OpenGenome de novo assembly workflow.",
+  "type": "object",
+  "required": [
+    "sample",
+    "row_id",
+    "input_type",
+    "long_reads"
+  ],
+  "properties": {
+    "sample": {
+      "type": "string",
+      "minLength": 1
+    },
+    "row_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lane": {
+      "type": "string"
+    },
+    "input_type": {
+      "type": "string",
+      "const": "long_reads"
+    },
+    "long_reads": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sex": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

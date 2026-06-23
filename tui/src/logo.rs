@@ -23,7 +23,7 @@ enum Renderer {
     Blocks,
 }
 
-/// PNG / half-block logo (original CTT asset).
+/// Optional PNG / half-block logo fallback.
 pub(crate) struct ImageLogo {
     renderer: Renderer,
     rgba: RgbaImage,
@@ -70,7 +70,8 @@ impl Logo {
 
 impl ImageLogo {
     fn load() -> Option<Self> {
-        let dyn_image = image::load_from_memory(include_bytes!("../assets/ctt_logo.png")).ok()?;
+        let dyn_image =
+            image::load_from_memory(include_bytes!("../assets/open_genome_logo.png")).ok()?;
         let rgba = dyn_image.to_rgba8();
         let image_size = rgba.dimensions();
 

@@ -1,0 +1,22 @@
+name = "Welcome"
+
+[[data]]
+name = "About Open Genome"
+description = "Open Genome is a local-first terminal workspace for setting up, running, and reviewing personal genomics workflows without uploading private genome data."
+script = "scripts/about_open_genome.sh"
+task_list = "INFO"
+multi_select = false
+
+[[data]]
+name = "What to expect"
+description = "See the practical path: choose local folders, install tools, run small checks first, then generate reports from local workflow outputs."
+script = "scripts/what_to_expect.sh"
+task_list = "START"
+multi_select = false
+
+[[data]]
+name = "Support the project"
+description = "Open Genome is being built as open local infrastructure; support means testing, reporting rough edges, contributing workflows, or sponsoring development."
+script = "scripts/support_project.sh"
+task_list = "INFO"
+multi_select = false

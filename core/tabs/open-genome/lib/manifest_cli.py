@@ -66,7 +66,17 @@ def _write_manifest(path: Path, data: dict) -> None:
         lines,
         "sample",
         sample,
-        ("input_dir", "sample_id", "patient_id", "input_type", "sex", "status", "samplesheet", "sarek_samplesheet"),
+        (
+            "input_dir",
+            "sample_id",
+            "patient_id",
+            "input_type",
+            "sex",
+            "status",
+            "samplesheet",
+            "sarek_samplesheet",
+            "recommended_plan",
+        ),
     )
 
     reference = data.setdefault("reference", {})
@@ -109,6 +119,7 @@ def _write_manifest(path: Path, data: dict) -> None:
             "outdir",
             "params_file",
             "command_file",
+            "recommended_plan",
             "last_run_dir",
             "denovo_outdir",
             "denovo_params_file",
@@ -155,6 +166,8 @@ def _write_manifest(path: Path, data: dict) -> None:
             "snpeff_db",
             "snpeff_config",
             "pharmcat_jar",
+            "clair3_hifi_model",
+            "clair3_ont_model",
         ),
     )
 
@@ -274,7 +287,17 @@ def main(argv: list[str]) -> int:
         privacy = data.get("privacy", {})
         print(f"  privacy.local_only={privacy.get('local_only', True)}")
         sample = data.get("sample", {})
-        for k in ("input_dir", "sample_id", "patient_id", "input_type", "sex", "status", "samplesheet", "sarek_samplesheet"):
+        for k in (
+            "input_dir",
+            "sample_id",
+            "patient_id",
+            "input_type",
+            "sex",
+            "status",
+            "samplesheet",
+            "sarek_samplesheet",
+            "recommended_plan",
+        ):
             print(f"  sample.{k}={sample.get(k, '')!r}")
         reference = data.get("reference", {})
         for k in (
@@ -301,6 +324,7 @@ def main(argv: list[str]) -> int:
             "outdir",
             "params_file",
             "command_file",
+            "recommended_plan",
             "last_run_dir",
             "denovo_outdir",
             "denovo_params_file",

@@ -227,7 +227,7 @@ def _find_vcf_rows(root: Path) -> list[dict[str, str]]:
     return rows
 
 
-def _find_denovo_read_rows(root: Path, fastq_rows: list[dict[str, str]] | None = None) -> list[dict[str, str]]:
+def _find_long_read_rows(root: Path, fastq_rows: list[dict[str, str]] | None = None) -> list[dict[str, str]]:
     used_fastqs = set()
     for row in fastq_rows or []:
         for key in ("fastq_1", "fastq_2"):
@@ -260,9 +260,9 @@ def _find_denovo_read_rows(root: Path, fastq_rows: list[dict[str, str]] | None =
         rows.append(
             {
                 "sample": sample,
-                "row_id": _safe_id(f"{sample}_denovo"),
+                "row_id": _safe_id(f"{sample}_long_reads"),
                 "lane": "lane_1",
-                "input_type": "denovo_reads",
+                "input_type": "long_reads",
                 "fastq_1": "",
                 "fastq_2": "",
                 "bam": "",
@@ -333,6 +333,36 @@ def _sarek_rows(rows: list[dict[str, str]]) -> list[dict[str, str]]:
     return converted
 
 
+def _recommended_plan(rows: list[dict[str, str]]) -> str:
+    counts: dict[str, int] = {}
+    long_read_paths: list[str] = []
+    for row in rows:
+        input_type = row.get("input_type", "").strip()
+        if not input_type:
+            continue
+        counts[input_type] = counts.get(input_type, 0) + 1
+        if input_type == "long_reads":
+            long_read_paths.append(row.get("long_reads", "").lower())
+
+    if not counts:
+        return "No runnable inputs detected"
+    if set(counts) == {"fastq"}:
+        return "Illumina WGS -> BWA-MEM2 + GATK"
+    if set(counts) == {"alignment"}:
+        return "BAM/CRAM -> reference workflow, caller chosen at run preparation"
+    if set(counts) == {"vcf"}:
+        return "Existing VCF -> report-only workflow"
+    if set(counts) == {"assembly"}:
+        return "Assembly FASTA -> existing assembly/report review"
+    if set(counts) == {"long_reads"}:
+        joined = " ".join(long_read_paths)
+        if any(token in joined for token in ("ont", "nanopore", "ultralong")):
+            return "ONT long reads -> minimap2 + Clair3; de novo uses Flye"
+        return "PacBio HiFi/CCS -> pbmm2 + Clair3; de novo uses hifiasm"
+    detail = ", ".join(f"{key}={value}" for key, value in sorted(counts.items()))
+    return f"Mixed inputs ({detail}) -> run preparation will ask for one outcome"
+
+
 def _write_samplesheet(path: Path, rows: list[dict[str, str]], columns: tuple[str, ...] | None = None) -> None:
     if not rows:
         raise ValueError("no sample rows to write")
@@ -373,16 +403,16 @@ def main(argv: list[str] | None = None) -> int:
     out = args.out or Path(workdir) / "samples" / default_name
 
     fastq_rows, warnings = _find_fastq_rows(root)
-    denovo_read_rows = _find_denovo_read_rows(root, fastq_rows)
+    long_read_rows = _find_long_read_rows(root, fastq_rows)
     align_rows = _find_alignment_rows(root)
     vcf_rows = _find_vcf_rows(root)
     assembly_rows = _find_assembly_rows(root)
-    rows = fastq_rows + denovo_read_rows + align_rows + vcf_rows + assembly_rows
+    rows = fastq_rows + long_read_rows + align_rows + vcf_rows + assembly_rows
     modes = [
         name
         for name, found in (
             ("fastq", fastq_rows),
-            ("denovo_reads", denovo_read_rows),
+            ("long_reads", long_read_rows),
             ("alignment", align_rows),
             ("vcf", vcf_rows),
             ("assembly", assembly_rows),
@@ -409,6 +439,7 @@ def main(argv: list[str] | None = None) -> int:
         if sarek_rows:
             _write_samplesheet(sarek_out, sarek_rows)
     first = rows[0]
+    recommended_plan = _recommended_plan(rows)
     user = manifest_cli._user_manifest()
     data.setdefault("paths", {})["dataset"] = str(root)
     sample = data.setdefault("sample", {})
@@ -419,6 +450,7 @@ def main(argv: list[str] | None = None) -> int:
     sample["sex"] = first.get("sex", "NA")
     sample["status"] = first.get("status", "0")
     sample["samplesheet"] = str(out.resolve())
+    sample["recommended_plan"] = recommended_plan
     if sarek_out:
         sample["sarek_samplesheet"] = str(sarek_out.resolve())
     manifest_cli._write_manifest(user, data)
@@ -428,12 +460,13 @@ def main(argv: list[str] | None = None) -> int:
     print("Input type counts:")
     for name, found in (
         ("fastq", fastq_rows),
-        ("denovo_reads", denovo_read_rows),
+        ("long_reads", long_read_rows),
         ("alignment", align_rows),
         ("vcf", vcf_rows),
         ("assembly", assembly_rows),
     ):
         print(f"  {name}: {len(found)}")
+    print(f"Recommended plan: {recommended_plan}")
     print("Sample rows:")
     for row in rows[:10]:
         print(f"  {row.get('row_id', row.get('sample', 'sample'))}: {row['input_type']} ({row['sample']})")

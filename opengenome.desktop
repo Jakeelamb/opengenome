@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Open Genome
+Comment=Local-first terminal workflows for genome data
+Exec=sh -c '/usr/bin/opengenome || $HOME/.cargo/bin/opengenome || opengenome'
+Icon=utilities-terminal
+Type=Application
+Terminal=true
+Categories=Science;Utility;

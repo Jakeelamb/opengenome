@@ -57,7 +57,7 @@
 
 Output preview.gif
 
-Require linutil
+Require opengenome
 Require sh
 
 Set Shell bash
@@ -68,7 +68,7 @@ Set Theme nord
 
 Sleep 1s
 
-Type "linutil" Sleep 1s  Enter
+Type "opengenome" Sleep 1s  Enter
 
 Sleep 2s
 
@@ -80,14 +80,7 @@ Down Sleep 1s
 Right Sleep 1s
 
 Type "/" Sleep 1s
-Type@200ms "Full System Cleanup" Sleep 1s Enter
+Type@200ms "Check what is ready" Sleep 1s Enter
 
 Sleep 1s
-Enter Sleep 2s
-Type "y"  # CONFIRMATION PROMPT
-Sleep 15s
-Type "y" # SYSTEM CLEANUP PROMPT
-Enter
-Sleep 4s
-Enter
-Sleep 2s
+Enter Sleep 4s

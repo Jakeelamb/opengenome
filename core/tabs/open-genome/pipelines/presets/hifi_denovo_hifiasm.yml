@@ -1,0 +1,5 @@
+preset: hifi_denovo_hifiasm
+workflow: denovo-assembly
+assembler: hifiasm
+long_read_platform: hifi
+genome_size: 3g

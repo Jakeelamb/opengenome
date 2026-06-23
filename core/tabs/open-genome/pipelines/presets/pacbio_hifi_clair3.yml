@@ -1,0 +1,8 @@
+preset: pacbio_hifi_clair3
+workflow: open-genome
+sequencing_platform: pacbio_hifi
+short_read_aligner: bwa-mem2
+long_read_aligner: pbmm2
+variant_caller: clair3
+deepvariant_model: auto
+clair3_platform: hifi

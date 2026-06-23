@@ -1,6 +1,6 @@
 # Contributor Notes
 
-Open Genome inherits a Rust TUI structure from Linutil but the user-facing product is a local-first genomics workflow launcher.
+Open Genome is a local-first Rust TUI for genomics workflow setup, execution, and report review.
 
 ## Local Development
 

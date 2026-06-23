@@ -1,5 +1,7 @@
 directories = [
+    "welcome",
     "setup",
     "genome-workflow",
     "visualization",
+    "learn-more",
 ]

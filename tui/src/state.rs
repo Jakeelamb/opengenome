@@ -8,6 +8,7 @@ use crate::{
     logo::Logo,
     root::check_root_status,
     running_command::RunningCommand,
+    setup_status::SetupChecklist,
     setup_wizard::{SetupWizard, SetupWizardStarts},
     shortcuts,
     system_info::SystemInfo,
@@ -75,6 +76,7 @@ pub struct AppState {
     mouse_enabled: bool,
     system_info: Option<SystemInfo>,
     logo: Option<Logo>,
+    setup_checklist: SetupChecklist,
 }
 
 pub enum Focus {
@@ -258,6 +260,7 @@ impl AppState {
             mouse_enabled: args.mouse,
             system_info: SystemInfo::gather(),
             logo: Logo::load(),
+            setup_checklist: SetupChecklist::new(),
         };
 
         #[cfg(unix)]
@@ -322,7 +325,10 @@ impl AppState {
         match command {
             Command::LocalFile { file, .. } => {
                 let path = file.to_string_lossy();
-                path.ends_with("/setup/scripts/show_paths.sh")
+                path.ends_with("/welcome/scripts/about_open_genome.sh")
+                    || path.ends_with("/welcome/scripts/what_to_expect.sh")
+                    || path.ends_with("/welcome/scripts/support_project.sh")
+                    || path.ends_with("/setup/scripts/show_paths.sh")
                     || path.ends_with("/genome-workflow/scripts/reference_bundle_status.sh")
                     || path.ends_with("/visualization/scripts/open_report_viewer.sh")
                     || path.ends_with("/visualization/scripts/results_summary.sh")
@@ -509,11 +515,6 @@ impl AppState {
             frame.render_widget(label, left_chunks[0]);
         }
 
-        self.areas = Some(Areas {
-            tab_list: left_chunks[1],
-            list: horizontal[1],
-        });
-
         let tabs = self
             .tabs
             .iter()
@@ -555,6 +556,21 @@ impl AppState {
             Layout::vertical([Constraint::Length(3), Constraint::Min(1)]).split(horizontal[1]);
 
         self.filter.draw_searchbar(frame, chunks[0], &self.theme);
+        let content_area = chunks[1];
+        let checklist_height = self.setup_checklist.preferred_height(content_area);
+        let (list_area, checklist_area) = if checklist_height > 0 {
+            let content_chunks =
+                Layout::vertical([Constraint::Min(8), Constraint::Length(checklist_height)])
+                    .split(content_area);
+            (content_chunks[0], Some(content_chunks[1]))
+        } else {
+            (content_area, None)
+        };
+
+        self.areas = Some(Areas {
+            tab_list: left_chunks[1],
+            list: list_area,
+        });
 
         let title = if self.multi_select {
             &format!("{TITLE}[Multi-Select] ")
@@ -589,7 +605,7 @@ impl AppState {
             .title(task_list_title)
             .title_bottom(bottom_title)
             .padding(Padding::horizontal(1));
-        let list_inner_width = list_block.inner(chunks[1]).width as usize;
+        let list_inner_width = list_block.inner(list_area).width as usize;
         let list_content_width = list_inner_width.saturating_sub(LIST_HIGHLIGHT_SYMBOL.len());
 
         let mut items: Vec<Line> = Vec::with_capacity(self.filter.item_list().len());
@@ -667,13 +683,18 @@ impl AppState {
             .highlight_symbol(list_highlight_symbol)
             .block(list_block)
             .scroll_padding(1);
-        frame.render_stateful_widget(list, chunks[1], &mut self.selection);
+        frame.render_stateful_widget(list, list_area, &mut self.selection);
+
+        if let Some(checklist_area) = checklist_area {
+            self.setup_checklist
+                .draw(frame, checklist_area, &self.theme);
+        }
 
         match &mut self.focus {
-            Focus::FloatingWindow(float) => float.draw(frame, chunks[1], &self.theme),
-            Focus::ConfirmationPrompt(prompt) => prompt.draw(frame, chunks[1], &self.theme),
-            Focus::FilePicker(picker, _) => picker.draw(frame, chunks[1], &self.theme),
-            Focus::SetupWizard(wizard) => wizard.draw(frame, chunks[1], &self.theme),
+            Focus::FloatingWindow(float) => float.draw(frame, content_area, &self.theme),
+            Focus::ConfirmationPrompt(prompt) => prompt.draw(frame, content_area, &self.theme),
+            Focus::FilePicker(picker, _) => picker.draw(frame, content_area, &self.theme),
+            Focus::SetupWizard(wizard) => wizard.draw(frame, content_area, &self.theme),
             _ => {}
         }
 
@@ -1264,6 +1285,8 @@ mod tests {
             size_bypass: false,
             mouse: false,
             bypass_root: true,
+            demo_output: false,
+            human_validation_output: false,
         });
         let backend = TestBackend::new(140, 42);
         let mut terminal = Terminal::new(backend).unwrap();

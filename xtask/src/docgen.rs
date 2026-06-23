@@ -44,7 +44,7 @@ pub fn userguide() -> Result<String, DynError> {
                 md.push_str(&format!("- **{}**: {}\n", entry.name, entry.description));
             } /* else {
                   md.push_str(&format!("- **{}**\n", entry.name));
-              } */ // https://github.com/ChrisTitusTech/linutil/pull/753
+              } */
         }
     }
 

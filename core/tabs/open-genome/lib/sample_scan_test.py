@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import csv
+import contextlib
+import io
 import os
 import tempfile
 import unittest
@@ -40,7 +42,7 @@ class SampleScanTests(unittest.TestCase):
             self.assertEqual("vcf", sample_scan._find_vcf_rows(root)[0]["input_type"])
             self.assertEqual("assembly", sample_scan._find_assembly_rows(root)[0]["input_type"])
 
-    def test_long_read_rows_for_denovo_assembly(self) -> None:
+    def test_long_read_rows_for_reference_and_assembly(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             hifi_reads = root / "HG002.hifi_reads.fastq.gz"
@@ -51,15 +53,19 @@ class SampleScanTests(unittest.TestCase):
             assembly.write_text(">x\nACGT\n", encoding="utf-8")
 
             fastq_rows, warnings = sample_scan._find_fastq_rows(root)
-            rows = sample_scan._find_denovo_read_rows(root, fastq_rows)
+            rows = sample_scan._find_long_read_rows(root, fastq_rows)
 
             self.assertEqual([], warnings)
             self.assertEqual([], fastq_rows)
-            self.assertEqual(["denovo_reads", "denovo_reads"], [row["input_type"] for row in rows])
+            self.assertEqual(["long_reads", "long_reads"], [row["input_type"] for row in rows])
             self.assertEqual(str(hifi_reads.resolve()), rows[0]["long_reads"])
             self.assertEqual(str(ont_reads.resolve()), rows[1]["long_reads"])
             self.assertEqual("assembly", sample_scan._find_assembly_rows(root)[0]["input_type"])
             self.assertEqual([], sample_scan._find_alignment_rows(root))
+            self.assertEqual(
+                "ONT long reads -> minimap2 + Clair3; de novo uses Flye",
+                sample_scan._recommended_plan([rows[1]]),
+            )
 
     def test_write_open_genome_columns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -117,7 +123,9 @@ class SampleScanTests(unittest.TestCase):
             old_cfg = os.environ.get("OPEN_GENOME_CONFIG_DIR")
             os.environ["OPEN_GENOME_CONFIG_DIR"] = cfg
             try:
-                self.assertEqual(0, sample_scan.main([str(root), "--out", str(out)]))
+                stdout = io.StringIO()
+                with contextlib.redirect_stdout(stdout):
+                    self.assertEqual(0, sample_scan.main([str(root), "--out", str(out)]))
             finally:
                 if old_cfg is None:
                     os.environ.pop("OPEN_GENOME_CONFIG_DIR", None)
@@ -126,6 +134,10 @@ class SampleScanTests(unittest.TestCase):
             with out.open("r", encoding="utf-8", newline="") as fh:
                 rows = list(csv.DictReader(fh))
             self.assertEqual(["fastq", "vcf"], [row["input_type"] for row in rows])
+            self.assertIn(
+                "Recommended plan: Mixed inputs (fastq=1, vcf=1) -> run preparation will ask for one outcome",
+                stdout.getvalue(),
+            )
 
     def test_symlink_outside_root_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

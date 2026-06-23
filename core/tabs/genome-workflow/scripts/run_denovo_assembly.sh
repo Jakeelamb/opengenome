@@ -30,6 +30,10 @@ fi
 
 echo "About to run local Open Genome de novo assembly:"
 echo "  $command_file"
+analysis_plan=$(open_genome_manifest_get workflow.recommended_plan)
+if test -n "$analysis_plan"; then
+	echo "Plan: $analysis_plan"
+fi
 echo ""
 echo "Your genome data stays local. Human de novo assembly can require high RAM, CPU, and disk space."
 printf 'Continue? [y/N] '

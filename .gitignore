@@ -4,6 +4,13 @@
 rust/target
 rust/build
 /build/linutil
+/output
+/.nextflow/
+/.nextflow.log*
+/.nf-test.log
+**/.nf-test/
+**/.nf-test.log
+/.playwright-cli/
 
 # Hugo Files
 docs/public/
@@ -36,5 +43,6 @@ desktop.ini
 *.sw?
 *~
 .gstack/
+.tools/
 __pycache__/
 *.pyc

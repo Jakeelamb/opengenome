@@ -28,6 +28,7 @@ sex = "NA"
 status = "0"
 samplesheet = ""
 sarek_samplesheet = ""
+recommended_plan = ""
 
 [reference]
 profile = "gatk_grch38"
@@ -51,6 +52,7 @@ sarek_runtime = "conda"
 outdir = ""
 params_file = ""
 command_file = ""
+recommended_plan = ""
 last_run_dir = ""
 denovo_outdir = ""
 denovo_params_file = ""
@@ -83,6 +85,8 @@ vep_cache = ""
 snpeff_db = ""
 snpeff_config = ""
 pharmcat_jar = ""
+clair3_hifi_model = ""
+clair3_ont_model = ""
 
 # Module ids match directories under open-genome/modules/<id>/
 

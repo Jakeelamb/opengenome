@@ -1,0 +1,5 @@
+preset: ont_denovo_flye
+workflow: denovo-assembly
+assembler: flye
+long_read_platform: ont
+genome_size: 3g

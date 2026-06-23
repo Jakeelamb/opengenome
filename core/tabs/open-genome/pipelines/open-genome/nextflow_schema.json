@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opengenome.local/schemas/open-genome-reference-params.json",
+  "title": "OpenGenome reference germline workflow parameters",
+  "description": "Parameters for reference-based germline analysis from Illumina WGS, PacBio HiFi, ONT, BAM, or CRAM inputs.",
+  "type": "object",
+  "$defs": {
+    "input_output_options": {
+      "title": "Input/output options",
+      "type": "object",
+      "required": ["samplesheet", "outdir", "fasta"],
+      "properties": {
+        "samplesheet": {
+          "type": "string",
+          "format": "file-path",
+          "description": "OpenGenome CSV samplesheet containing only fastq, long_reads, or alignment rows.",
+          "schema": "assets/samplesheet_schema.json"
+        },
+        "input_dir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Original local input folder selected in the TUI. Used for provenance; runnable file paths come from the samplesheet.",
+          "default": ""
+        },
+        "outdir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Output directory for workflow results."
+        },
+        "max_cpus": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum local CPU threads Open Genome may assign to any task.",
+          "default": 2
+        },
+        "fasta": {
+          "type": "string",
+          "format": "file-path",
+          "description": "Reference FASTA."
+        },
+        "fasta_fai": {
+          "type": "string",
+          "format": "file-path",
+          "description": "Reference FASTA index."
+        },
+        "dict": {
+          "type": "string",
+          "format": "file-path",
+          "description": "GATK/Picard sequence dictionary for the reference."
+        }
+      }
+    },
+    "preset_options": {
+      "title": "Preset and caller options",
+      "type": "object",
+      "properties": {
+        "sequencing_platform": {
+          "type": "string",
+          "enum": ["illumina", "pacbio_hifi", "ont"],
+          "default": "illumina"
+        },
+        "short_read_aligner": {
+          "type": "string",
+          "enum": ["bwa", "bwa-mem2"],
+          "default": "bwa-mem2"
+        },
+        "long_read_aligner": {
+          "type": "string",
+          "enum": ["auto", "pbmm2", "minimap2", "dorado"],
+          "default": "auto"
+        },
+        "variant_caller": {
+          "type": "string",
+          "enum": ["auto", "gatk", "deepvariant", "clair3"],
+          "default": "auto",
+          "description": "auto selects GATK for Illumina and Clair3 for PacBio HiFi or ONT. deepvariant is an explicit external override."
+        },
+        "deepvariant_model": {
+          "type": "string",
+          "default": "auto",
+          "description": "DeepVariant model name used only when variant_caller=deepvariant."
+        },
+        "deepvariant_bin": {
+          "type": "string",
+          "default": "run_deepvariant",
+          "description": "DeepVariant executable or wrapper used only when variant_caller=deepvariant."
+        },
+        "clair3_model": {
+          "type": "string",
+          "default": "",
+          "description": "Clair3 model directory containing pileup.pt and full_alignment.pt for long-read calling."
+        },
+        "clair3_platform": {
+          "type": "string",
+          "enum": ["auto", "ilmn", "hifi", "ont"],
+          "default": "auto"
+        },
+        "clair3_bed": {
+          "type": "string",
+          "default": "",
+          "description": "Optional BED file limiting Clair3 calling intervals."
+        },
+        "clair3_ctg": {
+          "type": "string",
+          "default": "",
+          "description": "Optional contig name limiting Clair3 calling."
+        },
+        "clair3_chunk_size": {
+          "type": "integer",
+          "default": 5000000,
+          "description": "Chunk size passed to Clair3. Large values are useful for bounded smoke tests."
+        }
+      }
+    },
+    "annotation_options": {
+      "title": "Local annotation options",
+      "type": "object",
+      "properties": {
+        "dbsnp": {"type": "string", "default": ""},
+        "known_indels": {"type": "string", "default": ""},
+        "clinvar": {"type": "string", "default": ""},
+        "gnomad": {"type": "string", "default": ""},
+        "vep_cache": {"type": "string", "default": ""},
+        "snpeff_db": {"type": "string", "default": ""},
+        "pharmcat_jar": {"type": "string", "default": ""},
+        "enable_clinvar": {"type": "boolean", "default": true},
+        "enable_pgx": {"type": "boolean", "default": true}
+      }
+    }
+  },
+  "allOf": [
+    {"$ref": "#/$defs/input_output_options"},
+    {"$ref": "#/$defs/preset_options"},
+    {"$ref": "#/$defs/annotation_options"}
+  ]
+}

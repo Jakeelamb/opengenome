@@ -19,3 +19,5 @@ Reports are evidence summaries, not diagnosis or treatment advice. Variant match
 Negative findings do not remove genetic risk. Positive findings do not by themselves establish disease risk or clinical actionability.
 
 Assembly reports summarize technical assembly outputs such as contig count, total bases, N50, and longest contig. These metrics describe assembly contiguity and completeness signals; they are not health, ancestry, or trait interpretations.
+
+Mitochondrial outputs summarize mtDNA coverage, mtDNA variants, and a reference-guided consensus sequence when possible. They are not de novo mtDNA assembly, heteroplasmy validation, haplogroup assignment, or medical interpretation.

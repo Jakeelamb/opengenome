@@ -1,0 +1,19 @@
+nextflow_pipeline {
+  name "OpenGenome VCF annotation workflow"
+  script "../main.nf"
+
+  test("rejects reference-read samplesheets") {
+    when {
+      params {
+        samplesheet = "${baseDir}/assets/invalid_fastq_samplesheet.csv"
+        fasta = "${baseDir}/assets/test_reference.fa"
+        outdir = "${outputDir}/results"
+      }
+    }
+
+    then {
+      assert workflow.failed
+      assert workflow.stdout.join("\n").contains("vcf-annotate accepts only input_type=vcf")
+    }
+  }
+}

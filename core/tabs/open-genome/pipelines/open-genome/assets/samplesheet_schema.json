@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opengenome.local/schemas/open-genome-samplesheet.json",
+  "title": "OpenGenome reference workflow samplesheet",
+  "description": "Rows accepted by the OpenGenome reference germline and report workflow.",
+  "type": "object",
+  "required": [
+    "sample",
+    "row_id",
+    "input_type"
+  ],
+  "properties": {
+    "sample": {
+      "type": "string",
+      "minLength": 1
+    },
+    "row_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lane": {
+      "type": "string"
+    },
+    "input_type": {
+      "type": "string",
+      "enum": [
+        "fastq",
+        "long_reads",
+        "alignment"
+      ]
+    },
+    "fastq_1": {
+      "type": "string"
+    },
+    "fastq_2": {
+      "type": "string"
+    },
+    "bam": {
+      "type": "string"
+    },
+    "cram": {
+      "type": "string"
+    },
+    "vcf": {
+      "type": "string"
+    },
+    "assembly": {
+      "type": "string"
+    },
+    "long_reads": {
+      "type": "string"
+    },
+    "sex": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

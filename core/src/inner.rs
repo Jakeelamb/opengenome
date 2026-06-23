@@ -331,11 +331,35 @@ mod tab_directories_tests {
         let tabs = get_tabs(false);
         let names: Vec<_> = tabs.iter().map(|tab| tab.name.as_str()).collect();
 
-        assert_eq!(names, vec!["Start Here", "Run Analysis", "Results"]);
+        assert_eq!(
+            names,
+            vec![
+                "Welcome",
+                "Start Here",
+                "Run Analysis",
+                "Results",
+                "Learn More"
+            ]
+        );
         assert!(tabs
             .iter()
             .flat_map(|tab| tab.tree.root().descendants())
-            .any(|node| node.value().name == "Run local genome analysis"));
+            .any(|node| node.value().name == "About Open Genome"));
+        let run_analysis = tabs.iter().find(|tab| tab.name == "Run Analysis").unwrap();
+        let run_root = run_analysis.tree.root();
+        let run_items: Vec<_> = run_root
+            .children()
+            .map(|node| (node.value().name.as_str(), node.has_children()))
+            .collect();
+        assert_eq!(
+            run_items,
+            vec![
+                ("Run reference-based analysis", false),
+                ("Run existing VCF report", false),
+                ("Run de novo assembly", false),
+                ("Advanced workflow steps", true),
+            ]
+        );
         assert!(tabs
             .iter()
             .flat_map(|tab| tab.tree.root().descendants())
@@ -353,6 +377,7 @@ mod tab_directories_tests {
                 ("Start guided setup", false),
                 ("Check what is ready", false),
                 ("Try sample data", false),
+                ("Run human validation dataset", false),
                 ("Load existing results", false),
                 ("Advanced manual setup", true),
             ]
@@ -361,19 +386,11 @@ mod tab_directories_tests {
             node.has_children() || !matches!(&node.value().command, Command::None)
         }));
 
-        let workflow = tabs
-            .iter()
-            .find(|tab| tab.name == "Run Analysis")
-            .unwrap();
-        let workflow_root = workflow.tree.root();
-        assert!(workflow_root
-            .children()
-            .any(|node| node.value().name == "Run local genome analysis"));
-
         for tab_name in ["Run Analysis", "Results"] {
             let tab = tabs.iter().find(|tab| tab.name == tab_name).unwrap();
             assert!(
-                tab.tree.root()
+                tab.tree
+                    .root()
                     .children()
                     .any(|node| !matches!(&node.value().command, Command::None)),
                 "{tab_name} should expose at least one direct action"

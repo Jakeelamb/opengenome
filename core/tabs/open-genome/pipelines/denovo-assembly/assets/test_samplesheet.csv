@@ -1,0 +1,2 @@
+sample,row_id,lane,input_type,fastq_1,fastq_2,bam,cram,vcf,assembly,long_reads,sex,status
+toy,toy_long_reads,lane_1,long_reads,,,,,,,assets/test_reads.fastq,NA,0

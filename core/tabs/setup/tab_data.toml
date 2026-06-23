@@ -2,7 +2,7 @@ name = "Start Here"
 
 [[data]]
 name = "Start guided setup"
-description = "Recommended first step. Choose where results stay, select your sequencing files, and check what is still missing."
+description = "Recommended first step. Choose folders, import data, then let Open Genome pick the safest workflow defaults."
 script = "scripts/first_time_setup.sh"
 task_list = "START"
 multi_select = false
@@ -16,9 +16,16 @@ multi_select = false
 
 [[data]]
 name = "Try sample data"
-description = "Use a small public sample so you can see the workflow without using your own genome first."
+description = "Generate tiny local demo data and preview reports for reference variants, existing VCFs, and de novo assembly without running heavy workflows."
 script = "scripts/use_sample_human_dataset.sh"
 task_list = "DEMO"
+multi_select = false
+
+[[data]]
+name = "Run human validation dataset"
+description = "Download public GIAB HG003 chr20 HiFi data, downsample it, run the reference, existing VCF, and de novo pipelines, then keep outputs reloadable."
+script = "scripts/run_human_validation_dataset.sh"
+task_list = "VALIDATE"
 multi_select = false
 
 [[data]]
@@ -62,7 +69,7 @@ multi_select = false
 
 [[data.entries]]
 name = "Choose sequencing files"
-description = "Choose a FASTQ, BAM, CRAM, VCF, assembly file, or a folder containing them."
+description = "Choose Illumina FASTQ, PacBio/ONT long reads, BAM/CRAM, VCF, assembly, or a folder containing them."
 script = "scripts/scan_sequencing_folder.sh"
 task_list = "SETUP"
 multi_select = false
@@ -89,8 +96,15 @@ task_list = "DATA"
 multi_select = false
 
 [[data.entries]]
+name = "Download Clair3 models"
+description = "Download local Clair3 PacBio HiFi and ONT model files for long-read reference runs."
+script = "../genome-workflow/scripts/fetch_clair3_models.sh"
+task_list = "DATA"
+multi_select = false
+
+[[data.entries]]
 name = "Set CPU usage limit"
-description = "Limit how many CPU threads Open Genome workflows may use."
+description = "Limit how many CPU threads Open Genome passes to Nextflow workflows."
 script = "scripts/show_cpu_count.sh"
 task_list = "SETUP"
 multi_select = false

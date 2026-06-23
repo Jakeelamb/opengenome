@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opengenome.local/schemas/vcf-annotate-samplesheet.json",
+  "title": "OpenGenome VCF annotation samplesheet",
+  "type": "object",
+  "required": [
+    "sample",
+    "row_id",
+    "input_type",
+    "vcf"
+  ],
+  "properties": {
+    "sample": {
+      "type": "string",
+      "minLength": 1
+    },
+    "row_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_type": {
+      "type": "string",
+      "const": "vcf"
+    },
+    "vcf": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}

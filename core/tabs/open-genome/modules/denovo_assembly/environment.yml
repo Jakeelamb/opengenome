@@ -7,6 +7,8 @@ dependencies:
   - openjdk>=17,<18
   - nextflow>=24.10,<26.10
   - hifiasm>=0.25
+  - flye>=2.9,<2.10
+  - verkko>=2.3,<2.5
   - gfastats>=1.3,<1.4
   - seqkit>=2.9,<2.14
   - samtools>=1.21,<1.23

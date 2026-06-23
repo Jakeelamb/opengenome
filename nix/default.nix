@@ -8,7 +8,7 @@ let
   pTUI = (lib.importTOML ../tui/Cargo.toml).package;
 in
 rustPlatform.buildRustPackage {
-  pname = "linutil";
+  pname = "opengenome";
   inherit (p) version;
 
   src = ../.;
@@ -19,7 +19,6 @@ rustPlatform.buildRustPackage {
     inherit (pTUI) description;
     homepage = pTUI.documentation;
     license = lib.licenses.mit;
-    maintainers = with lib.maintainers; [ adamperkowski ];
-    mainProgram = "linutil";
+    mainProgram = "opengenome";
   };
 }

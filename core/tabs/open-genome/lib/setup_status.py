@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import os
 import shutil
@@ -43,6 +44,63 @@ def _path_exists(path: str, kind: str) -> bool:
     if kind == "dir":
         return p.is_dir()
     return p.exists()
+
+
+def _clair3_model_ready(path: str) -> bool:
+    if not path:
+        return False
+    root = Path(path).expanduser()
+    return (root / "pileup.pt").is_file() and (root / "full_alignment.pt").is_file()
+
+
+def _recommended_plan(samplesheet: str, sample_type: str) -> str:
+    if not samplesheet or not Path(samplesheet).is_file():
+        if sample_type:
+            return f"{sample_type}: choose sequencing files again if this looks wrong"
+        return "choose sequencing files to pick a recommended path"
+
+    counts: dict[str, int] = {}
+    long_read_paths: list[str] = []
+    try:
+        with Path(samplesheet).open("r", encoding="utf-8", newline="") as handle:
+            reader = csv.DictReader(handle)
+            for row in reader:
+                input_type = (row.get("input_type") or "").strip()
+                if not input_type:
+                    continue
+                counts[input_type] = counts.get(input_type, 0) + 1
+                if input_type == "long_reads":
+                    long_read_paths.append((row.get("long_reads") or "").lower())
+    except OSError:
+        return "samplesheet is unreadable; choose sequencing files again"
+
+    if not counts and sample_type == "fastq":
+        return "Illumina WGS -> BWA-MEM2 + GATK"
+    if not counts and sample_type == "long_reads":
+        return "Long reads -> Clair3 reference workflow; de novo assembly available"
+    if not counts and sample_type == "alignment":
+        return "BAM/CRAM -> reference workflow, caller chosen at run preparation"
+    if not counts and sample_type == "vcf":
+        return "Existing VCF -> report-only workflow"
+    if not counts and sample_type == "assembly":
+        return "Assembly FASTA -> existing assembly/report review"
+    if not counts:
+        return "samplesheet has no runnable rows"
+    if set(counts) == {"fastq"}:
+        return "Illumina WGS -> BWA-MEM2 + GATK"
+    if set(counts) == {"alignment"}:
+        return "BAM/CRAM -> reference workflow, caller chosen at run preparation"
+    if set(counts) == {"vcf"}:
+        return "Existing VCF -> report-only workflow"
+    if set(counts) == {"assembly"}:
+        return "Assembly FASTA -> existing assembly/report review"
+    if set(counts) == {"long_reads"}:
+        joined = " ".join(long_read_paths)
+        if any(token in joined for token in ("ont", "nanopore", "ultralong")):
+            return "ONT long reads -> minimap2 + Clair3; de novo uses Flye"
+        return "PacBio HiFi/CCS -> pbmm2 + Clair3; de novo uses hifiasm"
+    detail = ", ".join(f"{key}={value}" for key, value in sorted(counts.items()))
+    return f"Mixed inputs ({detail}) -> run preparation will ask for one outcome"
 
 
 def _run(command: list[str]) -> subprocess.CompletedProcess[str] | None:
@@ -100,18 +158,22 @@ def evaluate() -> dict:
     dataset = _value(data, "paths", "dataset")
     samplesheet = _value(data, "sample", "samplesheet")
     sample_type = _value(data, "sample", "input_type")
+    analysis_plan = _value(data, "sample", "recommended_plan") or _recommended_plan(samplesheet, sample_type)
     reference_path = _value(data, "paths", "reference")
     fasta = _value(data, "reference", "fasta")
     fai = _value(data, "reference", "fai")
     dict_path = _value(data, "reference", "dict")
     dbsnp = _value(data, "reference", "dbsnp")
     bwa_ready = data.get("reference", {}).get("bwa_index_ready", False)
+    bwa_mem2_ready = data.get("reference", {}).get("bwa_mem2_index_ready", False)
     clinvar = _value(data, "cache", "clinvar_vcf")
     clinvar_tbi = _value(data, "cache", "clinvar_tbi")
     gnomad = _value(data, "cache", "gnomad_vcf")
     vep_cache = _value(data, "cache", "vep_cache")
     snpeff_db = _value(data, "cache", "snpeff_db")
     pharmcat_jar = _value(data, "cache", "pharmcat_jar")
+    clair3_hifi_model = _value(data, "cache", "clair3_hifi_model")
+    clair3_ont_model = _value(data, "cache", "clair3_ont_model")
     outdir = _value(data, "workflow", "outdir")
     params_file = _value(data, "workflow", "params_file")
     command_file = _value(data, "workflow", "command_file")
@@ -140,6 +202,7 @@ def evaluate() -> dict:
                 item("Sequencing folder", _path_exists(dataset, "dir"), dataset, "Start Here -> Start guided setup or Advanced manual setup -> Choose sequencing files"),
                 item("Samplesheet", _path_exists(samplesheet, "file"), samplesheet, "Start Here -> Start guided setup or Advanced manual setup -> Choose sequencing files"),
                 item("Detected input type", bool(sample_type), sample_type, "Start Here -> Start guided setup or Advanced manual setup -> Choose sequencing files"),
+                info("Recommended plan", analysis_plan),
             ],
         },
         {
@@ -150,12 +213,15 @@ def evaluate() -> dict:
                 item("Reference FAI", _path_exists(fai, "file"), fai, "Run Analysis -> Advanced workflow steps -> Index reference genome"),
                 item("Reference dict", _path_exists(dict_path, "file"), dict_path, "Run Analysis -> Advanced workflow steps -> Index reference genome"),
                 item("BWA index", _is_true(bwa_ready), "ready", "Run Analysis -> Advanced workflow steps -> Index reference genome"),
+                item("BWA-MEM2 index", _is_true(bwa_mem2_ready), "ready", "Run Analysis -> Advanced workflow steps -> Index reference genome"),
                 item("dbSNP VCF", _path_exists(dbsnp, "file"), dbsnp, "Start Here -> Advanced manual setup -> Download reference genome"),
             ],
         },
         {
-            "name": "Optional report evidence",
+            "name": "Local models and report evidence",
             "items": [
+                item("Clair3 HiFi model", _clair3_model_ready(clair3_hifi_model), clair3_hifi_model, "Start Here -> Advanced manual setup -> Download Clair3 models"),
+                item("Clair3 ONT model", _clair3_model_ready(clair3_ont_model), clair3_ont_model, "Start Here -> Advanced manual setup -> Download Clair3 models"),
                 info("ClinVar VCF", clinvar or "not configured"),
                 info("gnomAD VCF", gnomad or "not configured"),
                 info("VEP cache", vep_cache or "not configured"),
@@ -166,9 +232,9 @@ def evaluate() -> dict:
         {
             "name": "Workflow",
             "items": [
-                item("Workflow output folder", _path_exists(outdir, "dir"), outdir, "Run Analysis -> Run local genome analysis"),
-                item("Params file", _path_exists(params_file, "file"), params_file, "Run Analysis -> Run local genome analysis"),
-                item("Run command", _path_exists(command_file, "file"), command_file, "Run Analysis -> Run local genome analysis"),
+                item("Workflow output folder", _path_exists(outdir, "dir"), outdir, "Run Analysis -> Run reference-based analysis or Run existing VCF report"),
+                item("Params file", _path_exists(params_file, "file"), params_file, "Run Analysis -> Run reference-based analysis or Run existing VCF report"),
+                item("Run command", _path_exists(command_file, "file"), command_file, "Run Analysis -> Run reference-based analysis or Run existing VCF report"),
                 info("De novo output folder", denovo_outdir or "not prepared"),
                 info("De novo run command", denovo_command_file or "not prepared"),
             ],
@@ -176,9 +242,9 @@ def evaluate() -> dict:
         {
             "name": "Results",
             "items": [
-                item("HTML report", _path_exists(report_html, "file"), report_html, "Start Here -> Load existing results or Run Analysis -> Run local genome analysis"),
-                item("Findings table", _path_exists(findings_tsv, "file"), findings_tsv, "Start Here -> Load existing results or Run Analysis -> Run local genome analysis"),
-                item("Evidence JSON", _path_exists(evidence_json, "file"), evidence_json, "Start Here -> Load existing results or Run Analysis -> Run local genome analysis"),
+                item("HTML report", _path_exists(report_html, "file"), report_html, "Start Here -> Load existing results or Run Analysis -> Run reference-based analysis"),
+                item("Findings table", _path_exists(findings_tsv, "file"), findings_tsv, "Start Here -> Load existing results or Run Analysis -> Run reference-based analysis"),
+                item("Evidence JSON", _path_exists(evidence_json, "file"), evidence_json, "Start Here -> Load existing results or Run Analysis -> Run reference-based analysis"),
                 info("De novo HTML report", denovo_report_html or "not run"),
             ],
         },
@@ -201,6 +267,7 @@ def evaluate() -> dict:
         "total": len(checks),
         "status": "ready to review results" if ready == len(checks) else "run the listed setup actions for unchecked items",
         "saved_locations": saved,
+        "recommended_plan": analysis_plan,
     }
 
 

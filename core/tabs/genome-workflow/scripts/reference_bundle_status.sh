@@ -12,6 +12,7 @@ echo "FASTA:             $(open_genome_manifest_get reference.fasta)"
 echo "FAI:               $(open_genome_manifest_get reference.fai)"
 echo "DICT:              $(open_genome_manifest_get reference.dict)"
 echo "BWA ready:         $(open_genome_manifest_get reference.bwa_index_ready)"
+echo "BWA-MEM2 ready:    $(open_genome_manifest_get reference.bwa_mem2_index_ready)"
 echo "dbSNP:             $(open_genome_manifest_get reference.dbsnp)"
 echo "Known indels:      $(open_genome_manifest_get reference.known_indels)"
 echo "Mills indels:      $(open_genome_manifest_get reference.mills_indels)"
@@ -32,6 +33,12 @@ if test -n "$fasta"; then
 	for suffix in amb ann bwt pac sa; do
 		if ! test -f "$fasta.$suffix"; then
 			echo "missing: BWA index $fasta.$suffix"
+			missing=1
+		fi
+	done
+	for suffix in 0123 bwt.2bit.64 amb ann pac; do
+		if ! test -f "$fasta.$suffix"; then
+			echo "missing: BWA-MEM2 index $fasta.$suffix"
 			missing=1
 		fi
 	done

@@ -1,0 +1,8 @@
+preset: illumina_wgs_gatk
+workflow: open-genome
+sequencing_platform: illumina
+short_read_aligner: bwa-mem2
+long_read_aligner: auto
+variant_caller: gatk
+deepvariant_model: auto
+clair3_platform: auto

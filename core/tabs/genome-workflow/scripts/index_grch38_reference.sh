@@ -18,7 +18,7 @@ fi
 
 echo "Indexing reference:"
 echo "  $fasta"
-echo "This writes .fai, .dict, and BWA index files next to the FASTA."
+echo "This writes .fai, .dict, BWA, and BWA-MEM2 index files next to the FASTA."
 printf 'Continue? [y/N] '
 read -r answer || true
 case "$answer" in
@@ -46,12 +46,18 @@ if test -f "$fasta.amb" && test -f "$fasta.ann" && test -f "$fasta.bwt" && test 
 else
 	open_genome_conda_run opengenome bwa index "$fasta"
 fi
+if test -f "$fasta.0123" && test -f "$fasta.bwt.2bit.64" && test -f "$fasta.amb" && test -f "$fasta.ann" && test -f "$fasta.pac"; then
+	echo "exists: BWA-MEM2 index files"
+else
+	open_genome_conda_run opengenome bwa-mem2 index "$fasta"
+fi
 
 open_genome_manifest_set paths.reference "$fasta"
 open_genome_manifest_set reference.fasta "$fasta"
 open_genome_manifest_set reference.fai "$fasta.fai"
 open_genome_manifest_set reference.dict "$dict"
 open_genome_manifest_set reference.bwa_index_ready true
+open_genome_manifest_set reference.bwa_mem2_index_ready true
 
 echo "Reference indexing complete."
 python3 "$OPEN_GENOME_MANIFEST_CLI" show

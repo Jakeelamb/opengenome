@@ -72,6 +72,20 @@ class SetupStatusTests(unittest.TestCase):
             self.assertTrue(sections["Input data"]["Sequencing folder"]["ok"])
             self.assertTrue(sections["Input data"]["Samplesheet"]["ok"])
             self.assertTrue(sections["Reference"]["Reference FASTA"]["ok"])
+            self.assertEqual("Illumina WGS -> BWA-MEM2 + GATK", status["recommended_plan"])
+
+    def test_recommended_plan_detects_ont_long_reads(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            samplesheet = Path(tmp) / "samples.csv"
+            samplesheet.write_text(
+                "sample,row_id,lane,input_type,fastq_1,fastq_2,bam,cram,vcf,assembly,long_reads,sex,status\n"
+                "HG002,HG002_long,lane_1,long_reads,,,,,,,/data/HG002_ont.fastq.gz,NA,0\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                "ONT long reads -> minimap2 + Clair3; de novo uses Flye",
+                setup_status._recommended_plan(str(samplesheet), "long_reads"),
+            )
 
 
 if __name__ == "__main__":

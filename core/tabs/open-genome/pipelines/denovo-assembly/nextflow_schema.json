@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opengenome.local/schemas/denovo-assembly-params.json",
+  "title": "OpenGenome de novo assembly workflow parameters",
+  "description": "Parameters for hifiasm, Flye, and Verkko long-read de novo assembly.",
+  "type": "object",
+  "$defs": {
+    "input_output_options": {
+      "title": "Input/output options",
+      "type": "object",
+      "required": ["samplesheet", "outdir"],
+      "properties": {
+        "samplesheet": {
+          "type": "string",
+          "format": "file-path",
+          "description": "OpenGenome CSV samplesheet containing only long_reads rows.",
+          "schema": "assets/samplesheet_schema.json"
+        },
+        "input_dir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Original local input folder selected in the TUI. Used for provenance; runnable file paths come from the samplesheet.",
+          "default": ""
+        },
+        "outdir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Output directory for workflow results."
+        },
+        "max_cpus": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum local CPU threads Open Genome may assign to any task.",
+          "default": 16
+        }
+      }
+    },
+    "assembly_options": {
+      "title": "Assembly options",
+      "type": "object",
+      "properties": {
+        "assembler": {
+          "type": "string",
+          "enum": ["hifiasm", "flye", "verkko"],
+          "default": "hifiasm"
+        },
+        "long_read_platform": {
+          "type": "string",
+          "enum": ["hifi", "ont", "hybrid"],
+          "default": "hifi"
+        },
+        "reference_guide": {
+          "type": "string",
+          "default": ""
+        },
+        "genome_size": {
+          "type": "string",
+          "default": "3g",
+          "description": "Expected haploid genome size passed to assemblers that require it. Human WGS defaults to 3g; tiny local smoke tests can override this."
+        },
+        "flye_read_type": {
+          "type": "string",
+          "enum": ["auto", "pacbio-hifi", "pacbio-corr", "pacbio-raw", "nano-hq", "nano-corr", "nano-raw"],
+          "default": "auto",
+          "description": "Flye read type override. Keep auto for TUI defaults: ONT uses nano-hq and HiFi/corrected examples use the selected override only when explicitly provided."
+        },
+        "assembler_threads": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 16
+        },
+        "assembler_memory": {
+          "type": "string",
+          "default": "88 GB"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {"$ref": "#/$defs/input_output_options"},
+    {"$ref": "#/$defs/assembly_options"}
+  ]
+}

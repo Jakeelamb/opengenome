@@ -1,0 +1,43 @@
+nextflow_pipeline {
+  name "OpenGenome de novo assembly workflow"
+  script "../main.nf"
+
+  test("rejects missing long-read rows") {
+    when {
+      params {
+        samplesheet = "${baseDir}/assets/invalid_vcf_samplesheet.csv"
+        outdir = "${outputDir}/results"
+      }
+    }
+
+    then {
+      assert workflow.failed
+      assert workflow.stdout.join("\n").contains("samplesheet has no long_reads rows")
+    }
+  }
+
+  test("stub run publishes public assembly review artifacts") {
+    when {
+      params {
+        samplesheet = "${baseDir}/assets/test_samplesheet.csv"
+        outdir = "${outputDir}/results"
+        assembler = "hifiasm"
+        long_read_platform = "hifi"
+      }
+      options "-stub-run"
+    }
+
+    then {
+      assert workflow.success
+      assert path("${outputDir}/results/assembly/toy_long_reads.circularity.tsv").exists()
+      assert path("${outputDir}/results/assembly/toy_long_reads.read_density.tsv").exists()
+      assert path("${outputDir}/results/assembly/toy_long_reads.read_density.svg").exists()
+      assert path("${outputDir}/results/assembly/toy_long_reads.assembly_graph.svg").exists()
+      assert path("${outputDir}/results/report/denovo_assembly_report.html").text.contains("Assembly review artifacts")
+      assert path("${outputDir}/results/report/denovo_assembly_report.html").text.contains("Assembly review visuals")
+      assert path("${outputDir}/results/report/denovo_assembly_report.html").text.contains("visual-panel")
+      assert path("${outputDir}/results/report/denovo_assembly_summary.tsv").text.contains("circularity")
+      assert path("${outputDir}/results/report/denovo_assembly_manifest.json").text.contains("read_density_plot")
+    }
+  }
+}

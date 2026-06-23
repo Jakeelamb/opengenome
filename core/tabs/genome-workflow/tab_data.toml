@@ -1,15 +1,22 @@
 name = "Run Analysis"
 
 [[data]]
-name = "Run local genome analysis"
-description = "Run or resume analysis on this computer. Your genome files are not uploaded."
-script = "scripts/run_open_genome.sh"
+name = "Run reference-based analysis"
+description = "Align reads or use BAM/CRAM, run QC, call variants, and build a report."
+script = "scripts/run_reference_analysis.sh"
+task_list = "RUN"
+multi_select = false
+
+[[data]]
+name = "Run existing VCF report"
+description = "Normalize and summarize an existing VCF. No alignment or variant calling."
+script = "scripts/run_existing_vcf_report.sh"
 task_list = "RUN"
 multi_select = false
 
 [[data]]
 name = "Run de novo assembly"
-description = "Assemble local long-read data with hifiasm. Best for PacBio HiFi; requires high RAM and disk for human genomes."
+description = "Assemble PacBio HiFi/CCS or Oxford Nanopore reads into contigs and review assembly outputs."
 script = "scripts/run_denovo_assembly.sh"
 task_list = "RUN"
 multi_select = false
@@ -34,7 +41,7 @@ multi_select = false
 
 [[data.entries]]
 name = "Prepare de novo assembly command"
-description = "Create the hifiasm de novo assembly command without running it yet."
+description = "Create the recommended long-read assembly command without running it yet."
 script = "scripts/prepare_denovo_assembly_run.sh"
 task_list = "ADV"
 multi_select = false

@@ -1,0 +1,19 @@
+nextflow_pipeline {
+  name "OpenGenome reference workflow"
+  script "../main.nf"
+
+  test("rejects VCF-only samplesheets") {
+    when {
+      params {
+        samplesheet = "${baseDir}/assets/invalid_vcf_samplesheet.csv"
+        fasta = "${baseDir}/assets/test_reference.fa"
+        outdir = "${outputDir}/results"
+      }
+    }
+
+    then {
+      assert workflow.failed
+      assert workflow.stdout.join("\n").contains("Use vcf-annotate for existing VCFs")
+    }
+  }
+}

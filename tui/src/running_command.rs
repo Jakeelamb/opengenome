@@ -1,6 +1,6 @@
 use crate::{float::FloatContent, hint::Shortcut, shortcuts, theme::Theme};
-use opengenome_core::Command;
 use oneshot::{channel, Receiver};
+use opengenome_core::Command;
 use portable_pty::{
     ChildKiller, CommandBuilder, ExitStatus, MasterPty, NativePtySystem, PtySize, PtySystem,
 };
@@ -21,8 +21,10 @@ use std::{
     thread::JoinHandle,
 };
 use time::{macros::format_description, OffsetDateTime};
-use tui_term::widget::PseudoTerminal;
-use vt100_ctt::{Parser, Screen};
+use tui_term::{
+    vt100::{Parser, Screen},
+    widget::PseudoTerminal,
+};
 
 pub struct RunningCommand {
     /// A buffer to save all the command output (accumulates, until the command exits)

@@ -7,11 +7,7 @@ Use GitHub releases as the primary distribution path.
 Run locally before publishing:
 
 ```bash
-cargo fmt --check
-cargo check -p opengenome_tui --all-features
-cargo test
-scripts/check-genomics.sh
-git diff --check
+scripts/pipeline-quality-gate.sh
 ```
 
 Confirm:

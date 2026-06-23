@@ -1,0 +1,8 @@
+preset: ont_clair3
+workflow: open-genome
+sequencing_platform: ont
+short_read_aligner: bwa-mem2
+long_read_aligner: minimap2
+variant_caller: clair3
+deepvariant_model: auto
+clair3_platform: ont

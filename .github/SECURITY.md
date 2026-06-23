@@ -16,7 +16,7 @@ Only the latest GitHub release and current `main` branch are supported for secur
 
 Use GitHub private vulnerability reporting:
 
-https://github.com/Jakeelamb/genome_os/security/advisories/new
+https://github.com/Jakeelamb/opengenome/security/advisories/new
 
 Please include:
 

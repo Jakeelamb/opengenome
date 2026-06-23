@@ -1,0 +1,6 @@
+preset: hybrid_denovo_verkko
+workflow: denovo-assembly
+assembler: verkko
+long_read_platform: hybrid
+genome_size: 3g
+status: deferred_until_samplesheet_v2

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opengenome.local/schemas/vcf-annotate-params.json",
+  "title": "OpenGenome existing VCF report workflow parameters",
+  "description": "Parameters for report-only processing of existing VCF inputs.",
+  "type": "object",
+  "$defs": {
+    "input_output_options": {
+      "title": "Input/output options",
+      "type": "object",
+      "required": ["samplesheet", "outdir", "fasta"],
+      "properties": {
+        "samplesheet": {
+          "type": "string",
+          "format": "file-path",
+          "description": "OpenGenome CSV samplesheet containing only vcf rows.",
+          "schema": "assets/samplesheet_schema.json"
+        },
+        "input_dir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Original local input folder selected in the TUI. Used for provenance; runnable file paths come from the samplesheet.",
+          "default": ""
+        },
+        "outdir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Output directory for workflow results."
+        },
+        "max_cpus": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum local CPU threads Open Genome may assign to any task.",
+          "default": 2
+        },
+        "fasta": {
+          "type": "string",
+          "format": "file-path",
+          "description": "Reference FASTA used for VCF normalization."
+        }
+      }
+    },
+    "annotation_options": {
+      "title": "Local annotation options",
+      "type": "object",
+      "properties": {
+        "dbsnp": {"type": "string", "default": ""},
+        "clinvar": {"type": "string", "default": ""},
+        "gnomad": {"type": "string", "default": ""},
+        "vep_cache": {"type": "string", "default": ""},
+        "snpeff_db": {"type": "string", "default": ""},
+        "pharmcat_jar": {"type": "string", "default": ""},
+        "enable_clinvar": {"type": "boolean", "default": true},
+        "enable_pgx": {"type": "boolean", "default": true}
+      }
+    }
+  },
+  "allOf": [
+    {"$ref": "#/$defs/input_output_options"},
+    {"$ref": "#/$defs/annotation_options"}
+  ]
+}
